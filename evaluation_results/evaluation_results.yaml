@@ -1,0 +1,129 @@
+accuracy_at_1: 1.0
+accuracy_at_10: 1.0
+accuracy_at_20: 1.0
+accuracy_at_3: 1.0
+accuracy_at_5: 1.0
+distance_ratio: !!python/object/apply:numpy._core.multiarray.scalar
+- &id001 !!python/object/apply:numpy.dtype
+  args:
+  - f4
+  - false
+  - true
+  state: !!python/tuple
+  - 3
+  - <
+  - null
+  - null
+  - null
+  - -1
+  - -1
+  - 0
+- !!binary |
+  sDJLyw==
+encoder_accuracy: 1.0
+encoder_adjusted_rand_index: 1.0
+encoder_distance_ratio: !!python/object/apply:numpy._core.multiarray.scalar
+- *id001
+- !!binary |
+  sDJLyw==
+encoder_mean_ap: !!python/object/apply:numpy._core.multiarray.scalar
+- &id002 !!python/object/apply:numpy.dtype
+  args:
+  - f8
+  - false
+  - true
+  state: !!python/tuple
+  - 3
+  - <
+  - null
+  - null
+  - null
+  - -1
+  - -1
+  - 0
+- !!binary |
+  AAAAAAAA8D8=
+encoder_mean_inter_class_distance: !!python/object/apply:numpy._core.multiarray.scalar
+- *id001
+- !!binary |
+  gZLsPg==
+encoder_mean_intra_class_distance: !!python/object/apply:numpy._core.multiarray.scalar
+- *id001
+- !!binary |
+  Gvk/sw==
+encoder_recall_at_5: !!python/object/apply:numpy._core.multiarray.scalar
+- *id002
+- !!binary |
+  eQ3lNZTX0D8=
+encoder_silhouette_score: 0.9999998807907104
+mean_ap: !!python/object/apply:numpy._core.multiarray.scalar
+- *id002
+- !!binary |
+  AAAAAAAA8D8=
+recall_at_1: !!python/object/apply:numpy._core.multiarray.scalar
+- *id002
+- !!binary |
+  J6+hvIbyqj8=
+recall_at_10: !!python/object/apply:numpy._core.multiarray.scalar
+- *id002
+- !!binary |
+  eQ3lNZTX4D8=
+recall_at_20: !!python/object/apply:numpy._core.multiarray.scalar
+- *id002
+- !!binary |
+  AAAAAAAA8D8=
+recall_at_3: !!python/object/apply:numpy._core.multiarray.scalar
+- *id002
+- !!binary |
+  X0N5DeU1xD8=
+recall_at_5: !!python/object/apply:numpy._core.multiarray.scalar
+- *id002
+- !!binary |
+  eQ3lNZTX0D8=
+silhouette_score: 0.9999998807907104
+spatial_accuracy: 1.0
+spatial_adjusted_rand_index: 1.0
+spatial_distance_ratio: !!python/object/apply:numpy._core.multiarray.scalar
+- *id001
+- !!binary |
+  2edIyw==
+spatial_mean_ap: !!python/object/apply:numpy._core.multiarray.scalar
+- *id002
+- !!binary |
+  AAAAAAAA8D8=
+spatial_mean_inter_class_distance: !!python/object/apply:numpy._core.multiarray.scalar
+- *id001
+- !!binary |
+  jF0rPw==
+spatial_mean_intra_class_distance: !!python/object/apply:numpy._core.multiarray.scalar
+- *id001
+- !!binary |
+  gaeCsw==
+spatial_recall_at_5: !!python/object/apply:numpy._core.multiarray.scalar
+- *id002
+- !!binary |
+  eQ3lNZTX0D8=
+spatial_silhouette_score: 1.0
+temporal_accuracy: 1.0
+temporal_adjusted_rand_index: 1.0
+temporal_distance_ratio: !!python/object/apply:numpy._core.multiarray.scalar
+- *id001
+- !!binary |
+  quOJyw==
+temporal_mean_ap: !!python/object/apply:numpy._core.multiarray.scalar
+- *id002
+- !!binary |
+  AAAAAAAA8D8=
+temporal_mean_inter_class_distance: !!python/object/apply:numpy._core.multiarray.scalar
+- *id001
+- !!binary |
+  1G0vPw==
+temporal_mean_intra_class_distance: !!python/object/apply:numpy._core.multiarray.scalar
+- *id001
+- !!binary |
+  DMxNsw==
+temporal_recall_at_5: !!python/object/apply:numpy._core.multiarray.scalar
+- *id002
+- !!binary |
+  eQ3lNZTX0D8=
+temporal_silhouette_score: 1.0

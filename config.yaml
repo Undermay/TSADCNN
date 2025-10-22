@@ -1,0 +1,55 @@
+# TSADCNN Configuration File
+
+# Model parameters
+model:
+  input_dim: 4             # input feature dimension [x, y, vx, vy]
+  encoder_type: "resnet18"  # backbone encoder: resnet18, resnet50
+  projection_dim: 128       # projection head output dimension
+  hidden_dim: 512          # hidden layer dimension
+  temperature: 0.07        # temperature parameter for contrastive loss
+  
+# Training parameters
+training:
+  batch_size: 256
+  epochs: 200
+  learning_rate: 0.0003
+  weight_decay: 1e-4
+  warmup_epochs: 10
+  optimizer: "adam"        # adam, sgd, lars
+  
+# Data parameters
+data:
+  dataset_path: "./data"
+  sequence_length: 10      # track segment length
+  num_workers: 4
+  pin_memory: true
+  
+# Augmentation parameters
+augmentation:
+  noise_std: 0.1          # gaussian noise standard deviation
+  dropout_prob: 0.1       # random dropout probability
+  time_shift_max: 2       # maximum time shift for temporal augmentation
+  
+# Loss parameters
+loss:
+  dual_contrast_weight: 1.0    # weight for dual contrast loss
+  temporal_weight: 0.5         # weight for temporal consistency loss
+  spatial_weight: 0.5          # weight for spatial consistency loss
+  
+# Logging and checkpoints
+logging:
+  log_dir: "./logs"
+  checkpoint_dir: "./checkpoints"
+  save_frequency: 10       # save model every N epochs
+  log_frequency: 100       # log metrics every N steps
+  
+# Evaluation parameters
+evaluation:
+  k_neighbors: [1, 5, 10]  # k values for k-NN evaluation
+  distance_metric: "cosine" # cosine, euclidean
+  
+# Hardware settings
+device:
+  use_cuda: true
+  gpu_ids: [0]
+  mixed_precision: true
