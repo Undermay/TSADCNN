@@ -57,8 +57,8 @@ def load_model(checkpoint_path: str, config: Dict[str, Any], device: torch.devic
         projection_layers=model_config['projection_layers']
     )
     
-    # 加载检查点
-    checkpoint = torch.load(checkpoint_path, map_location=device)
+    # 加载检查点（PyTorch 2.6 及以上需显式关闭 weights_only）
+    checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)
     model.load_state_dict(checkpoint['model_state_dict'])
     model = model.to(device)
     model.eval()

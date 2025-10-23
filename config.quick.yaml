@@ -1,0 +1,42 @@
+model:
+  input_dim: 4
+  encoder_hidden_dim: 128
+  encoder_output_dim: 64
+  projection_hidden_dim: 128
+  projection_output_dim: 64
+  temperature: 0.07
+  encoder_layers: 2
+  projection_layers: 2
+
+training:
+  batch_size: 128
+  epochs: 1
+  learning_rate: 0.0003
+  weight_decay: 0.0001
+
+data:
+  train_path: ./data/train_data.npy
+  val_path: ./data/test_data.npy
+  sequence_length: 10
+
+augmentation:
+  noise_std: 0.1
+  dropout_prob: 0.1
+  time_shift_range: 2
+
+evaluation:
+  k_neighbors: 5
+  distance_metric: cosine
+
+hardware:
+  use_gpu: false
+  num_workers: 0
+
+logging:
+  log_dir: ./logs
+  checkpoint_dir: ./checkpoints
+
+loss:
+  temporal_weight: 0.5
+  spatial_weight: 0.5
+  margin: 0.2
