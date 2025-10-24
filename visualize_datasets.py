@@ -74,7 +74,7 @@ def visualize(train_path: str, test_path: str,
         plot_mode(ax, f"{mode}", segs, labs)
 
     axes[0, 0].text(0.02, 1.06, '(a) 训练数据集', transform=axes[0, 0].transAxes, fontsize=12)
-    axes[1, 0].text(0.02, 1.06, '(b) 测试数据集', transform=axes[1, 0].transAxes, fontsize=12)
+    axes[1, 0].text(0.02, 1.06, '(b) 验证/测试数据集', transform=axes[1, 0].transAxes, fontsize=12)
 
     plt.tight_layout()
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
@@ -84,7 +84,7 @@ def visualize(train_path: str, test_path: str,
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Visualize datasets by motion models in two rows (train/test).')
+    parser = argparse.ArgumentParser(description='Visualize datasets by motion models in two rows (train/val-or-test).')
     parser.add_argument('--data_dir', type=str, default='data', help='Directory containing train/test npy')
     parser.add_argument('--segments_per_target', type=int, default=5)
     parser.add_argument('--data_variant', type=str, default='clean', choices=['clean', 'noisy'])
@@ -93,7 +93,10 @@ def main():
 
     if args.data_variant == 'clean':
         train_path = os.path.join(args.data_dir, 'train_data.npy')
-        test_path = os.path.join(args.data_dir, 'test_data.npy')
+        # 优先使用 val_data.npy（若存在），否则回退到 test_data.npy
+        val_candidate = os.path.join(args.data_dir, 'val_data.npy')
+        test_candidate = os.path.join(args.data_dir, 'test_data.npy')
+        test_path = val_candidate if os.path.exists(val_candidate) else test_candidate
         default_save = 'outputs/motion_models.png'
     else:
         train_path = os.path.join(args.data_dir, 'train_data_noisy.npy')

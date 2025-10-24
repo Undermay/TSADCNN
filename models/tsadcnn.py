@@ -28,7 +28,7 @@ class TSADCNN(nn.Module):
         encoder_output_dim: int = 256,
         projection_hidden_dim: int = 512,
         projection_output_dim: int = 128,
-        temperature: float = 0.07,
+        temperature: float = 0.07, #温度参数，控制对比学习中的相似度计算
         encoder_layers: int = 3,
         projection_layers: int = 2
     ):
@@ -36,7 +36,7 @@ class TSADCNN(nn.Module):
         
         self.input_dim = input_dim
         self.sequence_length = sequence_length
-        self.temperature = temperature
+        self.temperature = temperature 
         
         # 时空信息提取编码器
         self.encoder = TrackEncoder(
@@ -216,12 +216,12 @@ class TSADCNN(nn.Module):
         
         return normalized_loss
     
-    def associate_tracks(
+    def associate_tracks( #最邻近实现轨迹段关联
         self,
-        query_segments: torch.Tensor,
+        query_segments: torch.Tensor, #给定查询轨迹段中找到最匹配候选轨迹段 
         candidate_segments: torch.Tensor,
-        k: int = 1,
-        distance_metric: str = 'cosine'
+        k: int = 1, #返回前k个最近邻
+        distance_metric: str = 'cosine' #使用余弦相似度计算查询与候选轨迹段之间的相似度
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         轨迹段关联 - 使用最近邻方法
@@ -246,7 +246,7 @@ class TSADCNN(nn.Module):
                 # 余弦距离
                 query_norm = F.normalize(query_features, p=2, dim=1)
                 candidate_norm = F.normalize(candidate_features, p=2, dim=1)
-                similarity_matrix = torch.matmul(query_norm, candidate_norm.T)
+                similarity_matrix = torch.matmul(query_norm, candidate_norm.T) #计算余弦相似度，通过对归一化后的查询和候选轨迹段的特征向量进行点积操作，得到相似度矩阵
                 distance_matrix = 1 - similarity_matrix
             elif distance_metric == 'euclidean':
                 # 欧几里得距离

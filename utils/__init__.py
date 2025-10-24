@@ -9,10 +9,11 @@ TSADCNN Utils Package
 
 from .data_loader import TrackDataset
 from .augmentation import TrackAugmentation
-from .metrics import compute_association_metrics
+from .metrics import compute_association_metrics, compute_scene_precision_and_ap
 
 __all__ = [
     'TrackDataset',
     'TrackAugmentation', 
-    'compute_association_metrics'
+    'compute_association_metrics',
+    'compute_scene_precision_and_ap'
 ]

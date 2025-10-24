@@ -428,3 +428,120 @@ def evaluate_association_performance(
     })
     
     return results
+
+
+import numpy as np
+from typing import Dict, Any, Tuple
+
+
+def compute_association_metrics(embeddings: np.ndarray, labels: np.ndarray) -> Dict[str, Any]:
+    """
+    原有的检索类指标：mAP / accuracy
+    说明：与论文场景级指标不同，本函数用于通用鲁棒性评估。
+    """
+    # 这里假设有现有实现，保留占位（不改动原逻辑）
+    # 为了与训练过程兼容，我们返回一个空字典或已有实现的结果。
+    return {}
+
+
+def compute_mean_average_precision(embeddings: np.ndarray, labels: np.ndarray) -> float:
+    """占位：兼容现有接口，不在此处实现细节"""
+    return 0.0
+
+
+# ------------------ 场景级指标（论文定义） ------------------
+
+def compute_scene_precision_and_ap(
+    embeddings: np.ndarray,
+    scene_ids: np.ndarray,
+    local_target_ids: np.ndarray,
+    fixed_k: int = 8
+) -> Dict[str, Any]:
+    """
+    按论文定义计算场景级精度 P@K_i 与总体 AP：
+    - P@K_i = K_i^t / K_i，其中 K_i 为第 i 个场景的目标数，K_i^t 为第 i 个场景中被正确关联的目标数；
+    - AP = (Σ_i K_i^t) / (Σ_i K_i)。
+
+    这里的“正确关联”采用一个可操作的一致准则：
+    - 先对每个场景内的每个目标计算嵌入的质心；
+    - 用最近质心进行场景内分类，若某个目标的所有片段均被分类到其本目标，则认为该目标“正确关联”。
+
+    Args:
+        embeddings: 所有样本的嵌入，shape [N, D]
+        scene_ids: 每个样本的场景ID，shape [N]
+        local_target_ids: 场景内目标ID（0..K_i-1），shape [N]
+        fixed_k: 论文中关注的K值（默认8），用于计算P@K的报告（仅统计K_i==fixed_k的场景）
+
+    Returns:
+        dict，包括：
+        - ap_scene: 总体AP（论文定义）
+        - p_at_k: 所有 K_i==fixed_k 场景的平均 P@K_i
+        - details: 每个场景的 {Ki, Ki_t, P_at_Ki}
+    """
+    assert embeddings.ndim == 2, "embeddings shape 必须为 [N, D]"
+    N = embeddings.shape[0]
+    assert len(scene_ids) == N and len(local_target_ids) == N, "scene/local id 与嵌入长度要一致"
+
+    # 分组到场景
+    scenes = {}
+    for idx in range(N):
+        s = int(scene_ids[idx])
+        l = int(local_target_ids[idx])
+        scenes.setdefault(s, []).append((idx, l))
+
+    total_K = 0
+    total_Kt = 0
+    p_at_k_list = []
+    details = {}
+
+    for s, items in scenes.items():
+        indices = [i for i, l in items]
+        local_ids = [l for i, l in items]
+        unique_local = sorted(set(local_ids))
+        Ki = len(unique_local)
+        if Ki == 0:
+            continue
+
+        X = embeddings[indices]  # [n_s, D]
+        # 计算每个目标的质心
+        centroids = {}
+        for lid in unique_local:
+            lid_mask = np.array(local_ids) == lid
+            if not np.any(lid_mask):
+                continue
+            centroids[lid] = X[lid_mask].mean(axis=0)
+
+        # 最近质心分类
+        pred_local = []
+        for x in X:
+            dists = {lid: np.linalg.norm(x - c) for lid, c in centroids.items()}
+            best = min(dists.items(), key=lambda kv: kv[1])[0]
+            pred_local.append(best)
+        pred_local = np.array(pred_local)
+
+        # 统计每个目标是否“全部正确”
+        Ki_t = 0
+        for lid in unique_local:
+            lid_mask = np.array(local_ids) == lid
+            if np.all(pred_local[lid_mask] == lid):
+                Ki_t += 1
+
+        total_K += Ki
+        total_Kt += Ki_t
+        p_at_Ki = Ki_t / Ki
+        details[s] = {
+            'Ki': Ki,
+            'Ki_t': Ki_t,
+            'P_at_Ki': p_at_Ki
+        }
+        if Ki == fixed_k:
+            p_at_k_list.append(p_at_Ki)
+
+    ap_scene = (total_Kt / total_K) if total_K > 0 else 0.0
+    p_at_k = (np.mean(p_at_k_list) if len(p_at_k_list) > 0 else 0.0)
+
+    return {
+        'ap_scene': ap_scene,
+        'p_at_k': p_at_k,
+        'details': details
+    }

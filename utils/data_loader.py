@@ -24,7 +24,8 @@ class TrackDataset(Dataset):
         sequence_length: int = 10,
         augmentation: Optional['TrackAugmentation'] = None,
         is_training: bool = True,
-        input_dim: int = 4
+        input_dim: int = 4,
+        return_scene_info: bool = False
     ):
         """
         初始化数据集
@@ -35,25 +36,29 @@ class TrackDataset(Dataset):
             augmentation: 数据增强器
             is_training: 是否为训练模式
             input_dim: 输入维度
+            return_scene_info: 是否返回场景信息（scene_id、local_target_id）
         """
         self.data_path = data_path
         self.sequence_length = sequence_length
         self.augmentation = augmentation
         self.is_training = is_training
         self.input_dim = input_dim
+        self.return_scene_info = return_scene_info
         
         # 加载数据
-        self.track_segments, self.labels = self._load_data()
+        self.track_segments, self.labels, self.scene_ids, self.local_target_ids = self._load_data()
         
         logging.info(f"Loaded {len(self.track_segments)} track segments from {data_path}")
     
-    def _load_data(self) -> Tuple[List[np.ndarray], List[int]]:
+    def _load_data(self) -> Tuple[List[np.ndarray], List[int], List[int], List[int]]:
         """
         加载轨迹数据
         
         Returns:
             track_segments: 轨迹段列表
             labels: 标签列表
+            scene_ids: 场景ID列表（若不存在则为-1）
+            local_target_ids: 场景内目标ID（若不存在则为-1）
         """
         if not os.path.exists(self.data_path):
             # 如果数据文件不存在，生成模拟数据（默认使用论文仿真模型）
@@ -73,17 +78,21 @@ class TrackDataset(Dataset):
         else:
             raise ValueError(f"Unsupported data format: {self.data_path}")
     
-    def _load_json_data(self) -> Tuple[List[np.ndarray], List[int]]:
+    def _load_json_data(self) -> Tuple[List[np.ndarray], List[int], List[int], List[int]]:
         """从JSON文件加载数据"""
         with open(self.data_path, 'r') as f:
             data = json.load(f)
         
         track_segments = []
         labels = []
+        scene_ids = []
+        local_target_ids = []
         
         for item in data:
             segment = np.array(item['segment'], dtype=np.float32)
             label = item['label']
+            scene_id = item.get('scene_id', -1)
+            local_id = item.get('local_target_id', -1)
             
             # 确保序列长度一致
             if len(segment) >= self.sequence_length:
@@ -95,16 +104,25 @@ class TrackDataset(Dataset):
             
             track_segments.append(segment)
             labels.append(label)
+            scene_ids.append(scene_id)
+            local_target_ids.append(local_id)
         
-        return track_segments, labels
+        return track_segments, labels, scene_ids, local_target_ids
     
-    def _load_numpy_data(self) -> Tuple[List[np.ndarray], List[int]]:
+    def _load_numpy_data(self) -> Tuple[List[np.ndarray], List[int], List[int], List[int]]:
         """从NumPy文件加载数据"""
         data = np.load(self.data_path, allow_pickle=True).item()
         
         track_segments = data['segments']
         labels = data['labels']
-        # modes 字段可选，不强制使用
+        scene_ids = data.get('scene_ids', None)
+        local_target_ids = data.get('local_target_ids', None)
+        
+        # 缺省填充
+        if scene_ids is None:
+            scene_ids = [-1] * len(track_segments)
+        if local_target_ids is None:
+            local_target_ids = [-1] * len(track_segments)
         
         # 处理序列长度
         processed_segments = []
@@ -117,7 +135,7 @@ class TrackDataset(Dataset):
             
             processed_segments.append(segment.astype(np.float32))
         
-        return processed_segments, labels
+        return processed_segments, list(labels), list(scene_ids), list(local_target_ids)
     
     def __len__(self) -> int:
         """返回数据集大小"""
@@ -133,9 +151,12 @@ class TrackDataset(Dataset):
         Returns:
             segment: 轨迹段张量 [sequence_length, input_dim]
             label: 标签张量
+            可选：scene_id, local_target_id
         """
         segment = self.track_segments[idx].copy()
         label = self.labels[idx]
+        scene_id = self.scene_ids[idx] if self.scene_ids is not None else -1
+        local_id = self.local_target_ids[idx] if self.local_target_ids is not None else -1
         
         # 数据增强
         if self.augmentation is not None and self.is_training:
@@ -144,7 +165,13 @@ class TrackDataset(Dataset):
         # 转换为张量
         segment_tensor = torch.from_numpy(segment).float()
         label_tensor = torch.tensor(label).long()
-        return segment_tensor, label_tensor
+        
+        if self.return_scene_info:
+            scene_tensor = torch.tensor(scene_id).long()
+            local_tensor = torch.tensor(local_id).long()
+            return segment_tensor, label_tensor, scene_tensor, local_tensor
+        else:
+            return segment_tensor, label_tensor
 
 
 # ------------------ 论文仿真数据生成器 ------------------
@@ -155,8 +182,9 @@ def generate_motion_dataset(
     segments_per_mode: int,
     segments_per_target: int = 5,
     noise_std_pos: float = 0.3,
-    noise_std_vel: float = 0.1
-) -> Tuple[List[np.ndarray], List[int]]:
+    noise_std_vel: float = 0.1,
+    targets_per_scene: int = 8
+) -> Tuple[List[np.ndarray], List[int], List[int], List[int]]:
     """
     按论文要求生成多运动模型数据集：
     - 匀速（CV）
@@ -166,6 +194,7 @@ def generate_motion_dataset(
     - 大转弯（120-180°）
     
     每种运动模式生成指定数量的轨迹段，并为每个目标生成多个段，以保证对比学习正样本。
+    同时，将目标按场景分组，每个场景包含 K=targets_per_scene 个目标。
     
     Args:
         sequence_length: 序列长度
@@ -174,27 +203,38 @@ def generate_motion_dataset(
         segments_per_target: 每个目标的轨迹段数量（用于正样本）
         noise_std_pos: 位置噪声标准差
         noise_std_vel: 速度噪声标准差
+        targets_per_scene: 每个场景的目标数（论文中 K=8）
     
     Returns:
         track_segments: 轨迹段列表
         labels: 目标ID标签列表（跨模式唯一）
+        scene_ids: 场景ID列表
+        local_target_ids: 场景内目标ID（0..K-1）
     """
     modes = [
         ('CV', 0.0, 0.0),             # 匀速
         ('CA', 0.0, 1.0),             # 匀加速（使用加速度幅度因子）
         ('TURN_SMALL', 60.0, 0.0),    # 小转弯：总转角0-60°
-        ('TURN_MEDIUM', 120.0, 0.0),  # 中转弯：总转角60-120°
-        ('TURN_LARGE', 180.0, 0.0)    # 大转弯：总转角120-180°
+        ('TURN_MEDIUM', 120.0, 0.0),  # 中转弯：总转弯60-120°
+        ('TURN_LARGE', 180.0, 0.0)    # 大转弯：总转弯120-180°
     ]
     
     track_segments: List[np.ndarray] = []
     labels: List[int] = []
+    scene_ids: List[int] = []
+    local_target_ids: List[int] = []
     
     global_target_id = 0
+    global_scene_id = 0
     
     for mode_idx, (mode_name, max_turn_deg, accel_factor) in enumerate(modes):
         targets_count = segments_per_mode // segments_per_target
-        for target_local_id in range(targets_count):
+        # 仅保留能整除K的目标数以保证每场景K一致
+        usable_targets = (targets_count // targets_per_scene) * targets_per_scene
+        if usable_targets == 0:
+            continue
+        
+        for target_local_id in range(usable_targets):
             # 为同一目标设定基础参数，保证同目标段相似
             rng = np.random.default_rng(seed=(mode_idx * 100000 + target_local_id))
             base_x = rng.uniform(-100, 100)
@@ -220,6 +260,10 @@ def generate_motion_dataset(
                 turn_rate = total_turn_rad / max(1, sequence_length)  # 每步转角
             else:
                 turn_rate = 0.0
+            
+            # 计算场景ID与场景内本地ID
+            scene_id = global_scene_id + (target_local_id // targets_per_scene)
+            local_id_in_scene = target_local_id % targets_per_scene
             
             for seg_id in range(segments_per_target):
                 # 对每个段添加轻微扰动，模拟碎片化起点/速度差异
@@ -275,10 +319,15 @@ def generate_motion_dataset(
                 
                 track_segments.append(np.array(segment, dtype=np.float32))
                 labels.append(global_target_id)
+                scene_ids.append(scene_id)
+                local_target_ids.append(local_id_in_scene)
                 
             global_target_id += 1
+        
+        # 增加场景ID偏移，确保下一个模式的场景不冲突
+        global_scene_id += (usable_targets // targets_per_scene)
     
-    return track_segments, labels
+    return track_segments, labels, scene_ids, local_target_ids
 
 
 
@@ -313,9 +362,13 @@ def create_train_val_split(
     # 创建训练和验证数据
     train_segments = [dataset.track_segments[i] for i in train_indices]
     train_labels = [dataset.labels[i] for i in train_indices]
+    train_scene_ids = [dataset.scene_ids[i] for i in train_indices]
+    train_local_ids = [dataset.local_target_ids[i] for i in train_indices]
     
     val_segments = [dataset.track_segments[i] for i in val_indices]
     val_labels = [dataset.labels[i] for i in val_indices]
+    val_scene_ids = [dataset.scene_ids[i] for i in val_indices]
+    val_local_ids = [dataset.local_target_ids[i] for i in val_indices]
     
     # 保存数据
     if save_dir is None:
@@ -324,8 +377,8 @@ def create_train_val_split(
     train_path = os.path.join(save_dir, 'train_data.npy')
     val_path = os.path.join(save_dir, 'val_data.npy')
     
-    np.save(train_path, {'segments': train_segments, 'labels': train_labels})
-    np.save(val_path, {'segments': val_segments, 'labels': val_labels})
+    np.save(train_path, {'segments': train_segments, 'labels': train_labels, 'scene_ids': train_scene_ids, 'local_target_ids': train_local_ids})
+    np.save(val_path, {'segments': val_segments, 'labels': val_labels, 'scene_ids': val_scene_ids, 'local_target_ids': val_local_ids})
     
     logging.info(f"Created train/val split: {len(train_segments)}/{len(val_segments)} samples")
     

@@ -94,6 +94,77 @@ def create_test_loader(config: Dict[str, Any]) -> DataLoader:
     return test_loader
 
 
+def evaluate(config: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    评估：严格按论文场景级AP与P@K（K=8）
+    """
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    # 数据集（评估阶段返回场景信息）
+    test_data_path = config['dataset']['test_data_path']
+    sequence_length = config['dataset']['sequence_length']
+    input_dim = config['dataset']['input_dim']
+
+    test_dataset = TrackDataset(
+        data_path=test_data_path,
+        sequence_length=sequence_length,
+        augmentation=None,
+        is_training=False,
+        input_dim=input_dim,
+        return_scene_info=True
+    )
+
+    test_loader = DataLoader(test_dataset, batch_size=config['evaluation']['batch_size'], shuffle=False)
+
+    # 模型
+    model_cfg = config['model']
+    model = TSADCNN(
+        input_dim=input_dim,
+        encoder_output_dim=model_cfg['encoder_output_dim'],
+        projection_output_dim=model_cfg['projection_output_dim']
+    ).to(device)
+
+    if 'checkpoint_path' in config['evaluation'] and os.path.exists(config['evaluation']['checkpoint_path']):
+        state = torch.load(config['evaluation']['checkpoint_path'], map_location=device)
+        model.load_state_dict(state['model_state_dict'])
+
+    model.eval()
+
+    all_embeddings = []
+    all_scene_ids = []
+    all_local_ids = []
+
+    with torch.no_grad():
+        pbar = tqdm(test_loader, desc='Evaluating (scene-level)')
+        for batch in pbar:
+            # 解包（包含场景信息）
+            if len(batch) == 4:
+                segments, labels, scene_ids, local_ids = batch
+            else:
+                # 兼容旧版（无场景信息），填充为-1
+                segments, labels = batch
+                scene_ids = torch.full((segments.size(0),), -1, dtype=torch.long)
+                local_ids = torch.full((segments.size(0),), -1, dtype=torch.long)
+
+            segments = segments.to(device)
+            embeds = model.encode(segments)  # [B, D]
+
+            all_embeddings.append(embeds.cpu().numpy())
+            all_scene_ids.append(scene_ids.cpu().numpy())
+            all_local_ids.append(local_ids.cpu().numpy())
+
+    embeddings = np.concatenate(all_embeddings, axis=0)
+    scene_ids = np.concatenate(all_scene_ids, axis=0)
+    local_ids = np.concatenate(all_local_ids, axis=0)
+
+    # 场景级AP与P@K
+    fixed_k = int(config['evaluation'].get('fixed_k', 8))
+    results = compute_scene_precision_and_ap(embeddings, scene_ids, local_ids, fixed_k=fixed_k)
+
+    print(f"Scene AP: {results['ap_scene']:.4f} | P@{fixed_k}: {results['p_at_k']:.4f}")
+    return results
+
+
 def evaluate_model(
     model: TSADCNN,
     test_loader: DataLoader,
@@ -177,12 +248,13 @@ def evaluate_model(
     for key, value in spatial_metrics.items():
         results[f'spatial_{key}'] = value
     
-    # 4. 不同k值的性能
-    k_values = [1, 3, 5, 10, 20]
-    performance_results = evaluate_association_performance(
-        model, test_loader, device, k_values
-    )
-    results.update(performance_results)
+    # 4. 不同k值的性能（可选：由配置控制）
+    if config.get('evaluation', {}).get('enable_recall_curve', True):
+        k_values = [1, 3, 5, 10, 20]
+        performance_results = evaluate_association_performance(
+            model, test_loader, device, k_values
+        )
+        results.update(performance_results)
     
     return results, {
         'embeddings': all_embeddings,
@@ -425,6 +497,7 @@ def main():
     key_metrics = [
         'encoder_accuracy', 'temporal_accuracy', 'spatial_accuracy',
         'encoder_mean_ap', 'temporal_mean_ap', 'spatial_mean_ap',
+        # 可选打印 Recall@K，仅在启用时存在
         'recall_at_5', 'encoder_distance_ratio'
     ]
     

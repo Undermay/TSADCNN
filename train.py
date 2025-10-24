@@ -14,6 +14,7 @@ from models import TSADCNN
 from utils.data_loader import TrackDataset
 from utils.augmentation import TrackAugmentation
 from utils.metrics import compute_association_metrics
+from utils.metrics import compute_scene_precision_and_ap
 
 
 def setup_logging(log_dir: str) -> None:
@@ -59,6 +60,7 @@ def create_data_loaders(config: Dict[str, Any]) -> tuple:
     """创建数据加载器"""
     data_config = config['data']
     augmentation_config = config['augmentation']
+    model_config = config['model']
     
     # 数据增强
     augmentation = TrackAugmentation(
@@ -67,20 +69,24 @@ def create_data_loaders(config: Dict[str, Any]) -> tuple:
         time_shift_range=augmentation_config['time_shift_range']
     )
     
-    # 训练数据集
+    # 训练数据集（不返回场景信息）
     train_dataset = TrackDataset(
         data_path=data_config['train_path'],
         sequence_length=data_config['sequence_length'],
         augmentation=augmentation,
-        is_training=True
+        is_training=True,
+        input_dim=model_config.get('input_dim', 4),
+        return_scene_info=False
     )
     
-    # 验证数据集
+    # 验证数据集（返回场景信息）
     val_dataset = TrackDataset(
         data_path=data_config['val_path'],
         sequence_length=data_config['sequence_length'],
         augmentation=None,
-        is_training=False
+        is_training=False,
+        input_dim=model_config.get('input_dim', 4),
+        return_scene_info=True
     )
     
     # 数据加载器
@@ -179,7 +185,7 @@ def validate_epoch(
     device: torch.device,
     config: Dict[str, Any]
 ) -> Dict[str, float]:
-    """验证一个epoch"""
+    """验证一个epoch（场景级AP/P@K）"""
     model.eval()
     
     total_loss = 0.0
@@ -189,16 +195,28 @@ def validate_epoch(
     num_batches = 0
     
     all_embeddings = []
-    all_labels = []
+    all_scene_ids = []
+    all_local_ids = []
     
     loss_weights = config['loss']
+    fixed_k = int(config.get('evaluation', {}).get('fixed_k', 8))
     
     with torch.no_grad():
         pbar = tqdm(val_loader, desc="Validation")
         
-        for track_segments, labels in pbar:
+        for batch in pbar:
+            # 支持包含场景信息的批次
+            if len(batch) == 4:
+                track_segments, labels, scene_ids, local_ids = batch
+            else:
+                track_segments, labels = batch
+                scene_ids = torch.full((labels.size(0),), -1, dtype=torch.long)
+                local_ids = torch.full((labels.size(0),), -1, dtype=torch.long)
+            
             track_segments = track_segments.to(device)
             labels = labels.to(device)
+            scene_ids = scene_ids.to(device)
+            local_ids = local_ids.to(device)
             
             # 前向传播
             outputs = model(track_segments, return_projections=True)
@@ -220,31 +238,28 @@ def validate_epoch(
             total_cross_loss += losses['cross_loss'].item()
             num_batches += 1
             
-            # 收集嵌入和标签用于评估
-            all_embeddings.append(outputs['encoded_features'].cpu())
-            all_labels.append(labels.cpu())
+            # 收集嵌入与场景信息
+            all_embeddings.append(outputs['encoded_features'].cpu().numpy())
+            all_scene_ids.append(scene_ids.cpu().numpy())
+            all_local_ids.append(local_ids.cpu().numpy())
             
             pbar.set_postfix({
                 'Val Loss': f'{losses["total_loss"].item():.4f}'
             })
     
-    # 计算关联指标
-    all_embeddings = torch.cat(all_embeddings, dim=0)
-    all_labels = torch.cat(all_labels, dim=0)
-    
-    metrics = compute_association_metrics(
-        embeddings=all_embeddings,
-        labels=all_labels,
-        k=config['evaluation']['k_neighbors'],
-        distance_metric=config['evaluation']['distance_metric']
-    )
+    # 计算场景级AP/P@K
+    embeddings = np.concatenate(all_embeddings, axis=0)
+    scene_ids = np.concatenate(all_scene_ids, axis=0)
+    local_ids = np.concatenate(all_local_ids, axis=0)
+    scene_metrics = compute_scene_precision_and_ap(embeddings, scene_ids, local_ids, fixed_k=fixed_k)
     
     validation_results = {
         'total_loss': total_loss / num_batches,
         'temporal_loss': total_temporal_loss / num_batches,
         'spatial_loss': total_spatial_loss / num_batches,
         'cross_loss': total_cross_loss / num_batches,
-        **metrics
+        'ap_scene': scene_metrics['ap_scene'],
+        'p_at_k': scene_metrics['p_at_k']
     }
     
     return validation_results
@@ -347,17 +362,17 @@ def main():
         # 更新学习率
         scheduler.step()
         
-        # 记录指标
+        # 记录指标（更新为AP/P@K）
         logging.info(f"Train - Loss: {train_metrics['total_loss']:.4f}, "
                     f"Temporal: {train_metrics['temporal_loss']:.4f}, "
                     f"Spatial: {train_metrics['spatial_loss']:.4f}")
         
         logging.info(f"Val - Loss: {val_metrics['total_loss']:.4f}, "
-                    f"Accuracy: {val_metrics.get('accuracy', 0):.4f}, "
-                    f"Precision: {val_metrics.get('precision', 0):.4f}")
+                    f"SceneAP: {val_metrics.get('ap_scene', 0):.4f}, "
+                    f"P@K: {val_metrics.get('p_at_k', 0):.4f}")
         
-        # 保存检查点（以AP为主要性能指标）
-        current_metric = val_metrics.get('mean_ap', val_metrics.get('accuracy', 0))
+        # 保存检查点（以场景级AP为唯一指标）
+        current_metric = val_metrics.get('ap_scene', 0)
         is_best = current_metric > best_metric
         
         if is_best:
@@ -369,7 +384,7 @@ def main():
         )
     
     logging.info("Training completed!")
-    logging.info(f"Best validation accuracy: {best_metric:.4f}")
+    logging.info(f"Best validation AP (scene-level): {best_metric:.4f}")
 
 
 if __name__ == '__main__':
