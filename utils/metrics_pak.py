@@ -14,11 +14,40 @@ from sklearn.metrics import pairwise_distances
 import logging
 
 
+def _pak_for_single_scene(scene_embeddings: np.ndarray, local_ids: List[int]) -> Tuple[int, int]:
+    """计算单个场景的K与正确关联目标数，使用向量化最近质心分类。"""
+    if len(local_ids) == 0:
+        return 0, 0
+    unique_targets = np.array(sorted(set(local_ids)))
+    K = int(len(unique_targets))
+    if K == 0:
+        return 0, 0
+    # 计算每个目标的质心
+    centroids = []
+    for tid in unique_targets:
+        mask = (np.array(local_ids) == tid)
+        centroids.append(scene_embeddings[mask].mean(axis=0))
+    centroids = np.stack(centroids, axis=0)  # [K, D]
+    # 距离矩阵 [n_samples, K]
+    diff = scene_embeddings[:, None, :] - centroids[None, :, :]
+    dists = np.sqrt(np.sum(diff * diff, axis=2))
+    pred = unique_targets[np.argmin(dists, axis=1)]  # 映射回目标ID
+    # 统计每个目标是否所有样本均被正确分类
+    correct_targets = 0
+    for tid in unique_targets:
+        mask = (np.array(local_ids) == tid)
+        if np.all(pred[mask] == tid):
+            correct_targets += 1
+    return K, int(correct_targets)
+
+
 def compute_scene_level_pak_correct(
     embeddings: np.ndarray,
     scene_ids: np.ndarray,
     local_target_ids: np.ndarray,
-    k_values: Optional[List[int]] = None
+    k_values: Optional[List[int]] = None,
+    parallel: bool = False,
+    num_workers: int = 4
 ) -> Dict[str, float]:
     """
     按照论文定义计算正确的场景级P@K指标
@@ -47,63 +76,27 @@ def compute_scene_level_pak_correct(
     
     # 统计每个K值对应的场景数和正确关联数
     k_stats = {}  # k -> {'total_scenes': int, 'correct_targets': int, 'total_targets': int}
-    
-    for scene_id, items in scenes.items():
-        if len(items) == 0:
-            continue
-            
-        # 获取该场景的所有样本索引和目标ID
-        indices = [item[0] for item in items]
-        local_ids = [item[1] for item in items]
-        
-        # 计算该场景的目标数量K
-        unique_targets = sorted(set(local_ids))
-        K = len(unique_targets)
-        
+
+    def process_one(scene_items: List[Tuple[int, int]]):
+        indices = [it[0] for it in scene_items]
+        local_ids = [it[1] for it in scene_items]
+        scene_embeddings = embeddings[indices]
+        return _pak_for_single_scene(scene_embeddings, local_ids)
+
+    if parallel:
+        from concurrent.futures import ProcessPoolExecutor
+        with ProcessPoolExecutor(max_workers=max(1, int(num_workers))) as ex:
+            results = list(ex.map(process_one, scenes.values()))
+    else:
+        results = [process_one(items) for items in scenes.values()]
+
+    for K, correct_targets in results:
         if K == 0:
             continue
-            
-        # 初始化K值统计
         if K not in k_stats:
             k_stats[K] = {'total_scenes': 0, 'correct_targets': 0, 'total_targets': 0}
-        
         k_stats[K]['total_scenes'] += 1
         k_stats[K]['total_targets'] += K
-        
-        # 获取该场景的嵌入向量
-        scene_embeddings = embeddings[indices]  # [n_samples, D]
-        
-        # 计算每个目标的质心
-        target_centroids = {}
-        for target_id in unique_targets:
-            target_mask = np.array(local_ids) == target_id
-            target_embeddings = scene_embeddings[target_mask]
-            target_centroids[target_id] = np.mean(target_embeddings, axis=0)
-        
-        # 对每个样本进行最近质心分类
-        correct_targets = 0
-        for target_id in unique_targets:
-            target_mask = np.array(local_ids) == target_id
-            target_samples = scene_embeddings[target_mask]
-            
-            # 检查该目标的所有样本是否都被正确分类
-            all_correct = True
-            for sample in target_samples:
-                # 计算到所有质心的距离
-                distances = {}
-                for cid, centroid in target_centroids.items():
-                    distances[cid] = np.linalg.norm(sample - centroid)
-                
-                # 找到最近的质心
-                predicted_target = min(distances.keys(), key=lambda x: distances[x])
-                
-                if predicted_target != target_id:
-                    all_correct = False
-                    break
-            
-            if all_correct:
-                correct_targets += 1
-        
         k_stats[K]['correct_targets'] += correct_targets
     
     # 计算P@K结果
@@ -137,7 +130,9 @@ def compute_contrastive_association_metrics_correct(
     model,
     test_loader,
     device: torch.device,
-    k_values: List[int] = [5, 10, 20]
+    k_values: List[int] = [5, 10, 20],
+    parallel: bool = False,
+    num_workers: int = 4
 ) -> Dict[str, float]:
     """
     使用正确的P@K定义计算对比学习模型的关联指标
@@ -243,7 +238,7 @@ def compute_contrastive_association_metrics_correct(
     
     # 计算P@K指标
     results = compute_scene_level_pak_correct(
-        embeddings, scene_ids, local_ids, k_values
+        embeddings, scene_ids, local_ids, k_values, parallel=parallel, num_workers=num_workers
     )
     
     return results
@@ -254,7 +249,9 @@ def evaluate_contrastive_model_correct(
     test_loader,
     device: torch.device,
     k_values: List[int] = [5, 10, 20],
-    similarity_threshold: float = 0.5
+    similarity_threshold: float = 0.5,
+    parallel: bool = False,
+    num_workers: int = 4
 ) -> Dict[str, Any]:
     """
     使用正确的P@K定义全面评估对比学习模型
@@ -273,7 +270,7 @@ def evaluate_contrastive_model_correct(
     
     # 计算正确的P@K和AP指标
     association_metrics = compute_contrastive_association_metrics_correct(
-        model, test_loader, device, k_values
+        model, test_loader, device, k_values, parallel=parallel, num_workers=num_workers
     )
     
     # 计算轨迹关联准确率

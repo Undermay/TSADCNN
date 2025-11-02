@@ -13,10 +13,12 @@ class ResidualConvBlock(nn.Module):
         self.relu = nn.LeakyReLU(negative_slope=0.01)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        identity = x
         out = self.conv(x)
         out = self.bn(out)
         out = self.relu(out)
-        return self.relu(out + x)
+        out += identity
+        return out
 
 
 class TrackEncoder(nn.Module):
@@ -56,7 +58,7 @@ class TrackEncoder(nn.Module):
         # 新增：时间相关性图投影器，将 L×L 相关性图汇聚为 hidden_dim 向量
         self.temporal_corr_projector = nn.Sequential(
             nn.Linear(sequence_length * sequence_length, hidden_dim),
-            nn.ReLU()
+            nn.LeakyReLU(negative_slope=0.01)
         )
         
         # 替换空间特征提取为卷积残差结构（3x3 与 1x1）
@@ -87,7 +89,7 @@ class TrackEncoder(nn.Module):
         # 特征融合层
         self.feature_fusion = nn.Sequential(
             nn.Linear(hidden_dim * 2, hidden_dim),
-            nn.ReLU(),
+            nn.LeakyReLU(negative_slope=0.01),
             nn.Dropout(0.1),
             nn.Linear(hidden_dim, output_dim)
         )
@@ -95,7 +97,7 @@ class TrackEncoder(nn.Module):
         # 维度提升层 - TSADCNN的关键特性
         self.dimension_lifting = nn.Sequential(
             nn.Linear(output_dim, output_dim * 2),
-            nn.ReLU(),
+            nn.LeakyReLU(negative_slope=0.01),
             nn.Linear(output_dim * 2, output_dim)
         )
 
@@ -144,22 +146,3 @@ class TrackEncoder(nn.Module):
         correlation_matrix = Yi  # [batch_size, seq_len, seq_len]
         
         return encoded_features, correlation_matrix
-
-    def extract_temporal_features(self, track_sequence: torch.Tensor) -> torch.Tensor:
-        """单独提取时间特征（论文同构：d→L→tanh→L×L→线性汇聚）"""
-        temporal_features, (h_n, c_n) = self.temporal_encoder(track_sequence)
-        Yi = torch.tanh(self.to_L(temporal_features))  # [B, L, L]
-        return self.temporal_corr_projector(Yi.view(track_sequence.size(0), -1))
-    
-    def extract_spatial_features(self, track_sequence: torch.Tensor) -> torch.Tensor:
-        """单独提取空间特征（以 Yi 的 L×L 为输入）"""
-        batch_size = track_sequence.size(0)
-        temporal_features, (h_n, c_n) = self.temporal_encoder(track_sequence)
-        Yi = torch.tanh(self.to_L(temporal_features))  # [B, L, L]
-        x2d = Yi.unsqueeze(1)
-        x3 = self.act(self.spatial_conv3(x2d))
-        x1 = self.act(self.spatial_conv1(x2d))
-        spatial = x3 + x1
-        spatial = self.spatial_residual_stack(spatial)
-        spatial_flat = spatial.view(batch_size, -1)
-        return self.spatial_fc(spatial_flat)

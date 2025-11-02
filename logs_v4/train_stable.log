@@ -10807,3 +10807,170 @@ TypeError: TrackEncoder.__init__() got an unexpected keyword argument 'dropout'
 2025-11-01 20:32:56,533 - INFO - [final][SceneEval] P@15: 0.2002
 2025-11-01 20:32:56,533 - INFO - [final][SceneEval] P@20: 0.1808
 2025-11-01 20:32:56,533 - INFO - Final scene-level evaluation completed.
+2025-11-02 15:58:56,290 - INFO - Starting Stable Contrastive TSADCNN training
+2025-11-02 15:58:56,290 - INFO - Config loaded from config_improved_v4.yaml
+2025-11-02 15:58:56,291 - INFO - Resolved dirs -> log: logs_v4, tb: runs/contrastive_tsadcnn_v4, ckpt: checkpoints_v4
+2025-11-02 15:58:56,352 - INFO - Using device: cuda
+2025-11-02 15:58:56,352 - INFO - Auto-aligned similarity_threshold=0.500 from margin=1.0
+2025-11-02 15:58:56,352 - INFO - Creating data loaders...
+2025-11-02 15:58:58,927 - INFO - Applied per-segment MinMax normalization to trajectory pairs
+2025-11-02 15:58:58,927 - INFO - Loaded 20072 trajectory pairs from data/csv/train_correct.csv
+2025-11-02 15:58:58,928 - INFO - Positive pairs: 10036, Negative pairs: 10036
+2025-11-02 15:58:58,928 - INFO - Using 0-1 MinMax normalization (mode=segment) for trajectories
+2025-11-02 15:58:59,191 - INFO - Applied per-segment MinMax normalization to trajectory pairs
+2025-11-02 15:58:59,191 - INFO - Loaded 2064 trajectory pairs from data/csv/test_correct.csv
+2025-11-02 15:58:59,191 - INFO - Positive pairs: 1032, Negative pairs: 1032
+2025-11-02 15:58:59,192 - INFO - Using 0-1 MinMax normalization (mode=segment) for trajectories
+2025-11-02 15:58:59,192 - INFO - Training DataLoader uses SceneGroupedBatchSampler (group_by_scene=True)
+2025-11-02 15:58:59,192 - INFO - Training with scene-grouped batches (group_by_scene=True).
+2025-11-02 15:58:59,192 - INFO - Training samples: 20072
+2025-11-02 15:58:59,192 - INFO - Test samples: 2064
+2025-11-02 15:58:59,192 - INFO - Creating model...
+2025-11-02 15:58:59,470 - INFO - Model created with 4554325 parameters
+2025-11-02 15:58:59,470 - INFO - Creating optimizer...
+2025-11-02 15:59:01,393 - INFO - Creating scheduler...
+2025-11-02 15:59:01,395 - INFO - Starting training loop...
+2025-11-02 15:59:01,395 - INFO - Epoch 1/10
+2025-11-02 15:59:01,395 - INFO - Starting training epoch...
+2025-11-02 15:59:02,206 - INFO - Epoch 0, Batch 0/250, Total Loss: 0.9688, Contrastive Loss: 0.9504, Symmetric Loss: 0.0018, Acc(sim): 0.4688, Acc(dist): 0.4688
+2025-11-02 15:59:03,980 - INFO - Epoch 0, Batch 100/250, Total Loss: 0.1574, Contrastive Loss: 0.1574, Symmetric Loss: 0.0000, Acc(sim): 0.5312, Acc(dist): 0.5312
+2025-11-02 15:59:05,804 - INFO - Epoch 0, Batch 200/250, Total Loss: 0.1258, Contrastive Loss: 0.1258, Symmetric Loss: 0.0000, Acc(sim): 0.5000, Acc(dist): 0.5000
+2025-11-02 15:59:06,699 - INFO - Starting validation epoch...
+2025-11-02 15:59:07,074 - INFO - Epoch 1 completed in 5.68s
+2025-11-02 15:59:07,074 - INFO - Train Loss: 0.1894, Train Acc: 0.4995
+2025-11-02 15:59:07,074 - INFO - Val Loss: 0.1910, Val Acc: 0.4962
+2025-11-02 15:59:07,203 - INFO - Saved best checkpoint at epoch 0
+2025-11-02 15:59:07,203 - INFO - Saved checkpoint at epoch 0
+2025-11-02 15:59:07,204 - INFO - Epoch 2/10
+2025-11-02 15:59:07,204 - INFO - Starting training epoch...
+2025-11-02 15:59:07,228 - INFO - Epoch 1, Batch 0/250, Total Loss: 0.1293, Contrastive Loss: 0.1293, Symmetric Loss: 0.0000, Acc(sim): 0.5000, Acc(dist): 0.5000
+2025-11-02 15:59:09,184 - INFO - Epoch 1, Batch 100/250, Total Loss: 0.1275, Contrastive Loss: 0.1275, Symmetric Loss: 0.0000, Acc(sim): 0.5000, Acc(dist): 0.5000
+2025-11-02 15:59:11,160 - INFO - Epoch 1, Batch 200/250, Total Loss: 0.1364, Contrastive Loss: 0.1364, Symmetric Loss: 0.0000, Acc(sim): 0.4688, Acc(dist): 0.4688
+2025-11-02 15:59:12,086 - INFO - Starting validation epoch...
+2025-11-02 15:59:12,447 - INFO - Epoch 2 completed in 5.24s
+2025-11-02 15:59:12,448 - INFO - Train Loss: 0.1535, Train Acc: 0.4981
+2025-11-02 15:59:12,448 - INFO - Val Loss: 0.1470, Val Acc: 0.4962
+2025-11-02 15:59:12,516 - INFO - Saved checkpoint at epoch 1
+2025-11-02 15:59:12,516 - INFO - Epoch 3/10
+2025-11-02 15:59:12,516 - INFO - Starting training epoch...
+2025-11-02 15:59:12,541 - INFO - Epoch 2, Batch 0/250, Total Loss: 0.1409, Contrastive Loss: 0.1409, Symmetric Loss: 0.0000, Acc(sim): 0.4688, Acc(dist): 0.4688
+2025-11-02 15:59:14,554 - INFO - Epoch 2, Batch 100/250, Total Loss: 0.1676, Contrastive Loss: 0.1676, Symmetric Loss: 0.0000, Acc(sim): 0.4375, Acc(dist): 0.4375
+2025-11-02 15:59:16,688 - INFO - Epoch 2, Batch 200/250, Total Loss: 0.1427, Contrastive Loss: 0.1427, Symmetric Loss: 0.0000, Acc(sim): 0.5000, Acc(dist): 0.5000
+2025-11-02 15:59:17,797 - INFO - Starting validation epoch...
+2025-11-02 15:59:18,176 - INFO - Epoch 3 completed in 5.66s
+2025-11-02 15:59:18,176 - INFO - Train Loss: 0.1384, Train Acc: 0.5062
+2025-11-02 15:59:18,176 - INFO - Val Loss: 0.1496, Val Acc: 0.4962
+2025-11-02 15:59:18,242 - INFO - Saved checkpoint at epoch 2
+2025-11-02 15:59:18,242 - INFO - Epoch 4/10
+2025-11-02 15:59:18,243 - INFO - Starting training epoch...
+2025-11-02 15:59:18,268 - INFO - Epoch 3, Batch 0/250, Total Loss: 0.1317, Contrastive Loss: 0.1317, Symmetric Loss: 0.0000, Acc(sim): 0.5000, Acc(dist): 0.5000
+2025-11-02 15:59:20,091 - INFO - Epoch 3, Batch 100/250, Total Loss: 0.1470, Contrastive Loss: 0.1466, Symmetric Loss: 0.0000, Acc(sim): 0.5938, Acc(dist): 0.5938
+2025-11-02 15:59:21,859 - INFO - Epoch 3, Batch 200/250, Total Loss: 0.1416, Contrastive Loss: 0.1412, Symmetric Loss: 0.0000, Acc(sim): 0.5312, Acc(dist): 0.5312
+2025-11-02 15:59:22,771 - INFO - Starting validation epoch...
+2025-11-02 15:59:23,129 - INFO - Epoch 4 completed in 4.89s
+2025-11-02 15:59:23,129 - INFO - Train Loss: 0.1240, Train Acc: 0.5271
+2025-11-02 15:59:23,129 - INFO - Val Loss: 0.1647, Val Acc: 0.4962
+2025-11-02 15:59:23,195 - INFO - Saved checkpoint at epoch 3
+2025-11-02 15:59:23,195 - INFO - Epoch 5/10
+2025-11-02 15:59:23,195 - INFO - Starting training epoch...
+2025-11-02 15:59:23,220 - INFO - Epoch 4, Batch 0/250, Total Loss: 0.1365, Contrastive Loss: 0.1364, Symmetric Loss: 0.0000, Acc(sim): 0.5000, Acc(dist): 0.5000
+2025-11-02 15:59:25,110 - INFO - Epoch 4, Batch 100/250, Total Loss: 0.0819, Contrastive Loss: 0.0818, Symmetric Loss: 0.0000, Acc(sim): 0.6562, Acc(dist): 0.6562
+2025-11-02 15:59:26,976 - INFO - Epoch 4, Batch 200/250, Total Loss: 0.1026, Contrastive Loss: 0.1025, Symmetric Loss: 0.0000, Acc(sim): 0.6875, Acc(dist): 0.6875
+2025-11-02 15:59:27,963 - INFO - Starting validation epoch...
+2025-11-02 15:59:28,295 - INFO - Epoch 5 completed in 5.10s
+2025-11-02 15:59:28,295 - INFO - Train Loss: 0.1195, Train Acc: 0.6030
+2025-11-02 15:59:28,295 - INFO - Val Loss: 0.1319, Val Acc: 0.6529
+2025-11-02 15:59:28,418 - INFO - Saved best checkpoint at epoch 4
+2025-11-02 15:59:28,418 - INFO - Saved checkpoint at epoch 4
+2025-11-02 15:59:28,419 - INFO - Epoch 6/10
+2025-11-02 15:59:28,419 - INFO - Starting training epoch...
+2025-11-02 15:59:28,444 - INFO - Epoch 5, Batch 0/250, Total Loss: 0.1631, Contrastive Loss: 0.1630, Symmetric Loss: 0.0000, Acc(sim): 0.5625, Acc(dist): 0.5625
+2025-11-02 15:59:30,345 - INFO - Epoch 5, Batch 100/250, Total Loss: 0.0907, Contrastive Loss: 0.0905, Symmetric Loss: 0.0000, Acc(sim): 0.7188, Acc(dist): 0.7188
+2025-11-02 15:59:32,132 - INFO - Epoch 5, Batch 200/250, Total Loss: 0.1412, Contrastive Loss: 0.1411, Symmetric Loss: 0.0000, Acc(sim): 0.6250, Acc(dist): 0.6250
+2025-11-02 15:59:32,999 - INFO - Starting validation epoch...
+2025-11-02 15:59:33,338 - INFO - Epoch 6 completed in 4.92s
+2025-11-02 15:59:33,339 - INFO - Train Loss: 0.1186, Train Acc: 0.6432
+2025-11-02 15:59:33,339 - INFO - Val Loss: 0.1327, Val Acc: 0.6755
+2025-11-02 15:59:33,461 - INFO - Saved best checkpoint at epoch 5
+2025-11-02 15:59:33,461 - INFO - Saved checkpoint at epoch 5
+2025-11-02 15:59:33,461 - INFO - Epoch 7/10
+2025-11-02 15:59:33,461 - INFO - Starting training epoch...
+2025-11-02 15:59:33,486 - INFO - Epoch 6, Batch 0/250, Total Loss: 0.1522, Contrastive Loss: 0.1521, Symmetric Loss: 0.0000, Acc(sim): 0.6250, Acc(dist): 0.6250
+2025-11-02 15:59:35,282 - INFO - Epoch 6, Batch 100/250, Total Loss: 0.1377, Contrastive Loss: 0.1376, Symmetric Loss: 0.0000, Acc(sim): 0.6250, Acc(dist): 0.6250
+2025-11-02 15:59:37,031 - INFO - Epoch 6, Batch 200/250, Total Loss: 0.0471, Contrastive Loss: 0.0471, Symmetric Loss: 0.0000, Acc(sim): 0.8438, Acc(dist): 0.8438
+2025-11-02 15:59:37,924 - INFO - Starting validation epoch...
+2025-11-02 15:59:38,276 - INFO - Epoch 7 completed in 4.82s
+2025-11-02 15:59:38,276 - INFO - Train Loss: 0.1173, Train Acc: 0.6340
+2025-11-02 15:59:38,276 - INFO - Val Loss: 0.1167, Val Acc: 0.6683
+2025-11-02 15:59:38,339 - INFO - Saved checkpoint at epoch 6
+2025-11-02 15:59:38,340 - INFO - Epoch 8/10
+2025-11-02 15:59:38,340 - INFO - Starting training epoch...
+2025-11-02 15:59:38,368 - INFO - Epoch 7, Batch 0/250, Total Loss: 0.1113, Contrastive Loss: 0.1112, Symmetric Loss: 0.0000, Acc(sim): 0.6562, Acc(dist): 0.6562
+2025-11-02 15:59:40,134 - INFO - Epoch 7, Batch 100/250, Total Loss: 0.0878, Contrastive Loss: 0.0878, Symmetric Loss: 0.0000, Acc(sim): 0.6875, Acc(dist): 0.6875
+2025-11-02 15:59:41,778 - INFO - Epoch 7, Batch 200/250, Total Loss: 0.0626, Contrastive Loss: 0.0621, Symmetric Loss: 0.0001, Acc(sim): 0.7812, Acc(dist): 0.7812
+2025-11-02 15:59:42,621 - INFO - Starting validation epoch...
+2025-11-02 15:59:42,956 - INFO - Epoch 8 completed in 4.62s
+2025-11-02 15:59:42,956 - INFO - Train Loss: 0.1092, Train Acc: 0.6695
+2025-11-02 15:59:42,956 - INFO - Val Loss: 0.1103, Val Acc: 0.6659
+2025-11-02 15:59:43,018 - INFO - Saved checkpoint at epoch 7
+2025-11-02 15:59:43,018 - INFO - Epoch 9/10
+2025-11-02 15:59:43,018 - INFO - Starting training epoch...
+2025-11-02 15:59:43,041 - INFO - Epoch 8, Batch 0/250, Total Loss: 0.1505, Contrastive Loss: 0.1499, Symmetric Loss: 0.0001, Acc(sim): 0.5938, Acc(dist): 0.5938
+2025-11-02 15:59:44,747 - INFO - Epoch 8, Batch 100/250, Total Loss: 0.1758, Contrastive Loss: 0.1749, Symmetric Loss: 0.0001, Acc(sim): 0.5000, Acc(dist): 0.5000
+2025-11-02 15:59:46,437 - INFO - Epoch 8, Batch 200/250, Total Loss: 0.1557, Contrastive Loss: 0.1550, Symmetric Loss: 0.0001, Acc(sim): 0.4375, Acc(dist): 0.4375
+2025-11-02 15:59:47,302 - INFO - Starting validation epoch...
+2025-11-02 15:59:47,620 - INFO - Epoch 9 completed in 4.60s
+2025-11-02 15:59:47,620 - INFO - Train Loss: 0.1053, Train Acc: 0.5988
+2025-11-02 15:59:47,620 - INFO - Val Loss: 0.0998, Val Acc: 0.6322
+2025-11-02 15:59:47,683 - INFO - Saved checkpoint at epoch 8
+2025-11-02 15:59:47,683 - INFO - Epoch 10/10
+2025-11-02 15:59:47,683 - INFO - Starting training epoch...
+2025-11-02 15:59:47,710 - INFO - Epoch 9, Batch 0/250, Total Loss: 0.1742, Contrastive Loss: 0.1738, Symmetric Loss: 0.0000, Acc(sim): 0.5312, Acc(dist): 0.5312
+2025-11-02 15:59:49,554 - INFO - Epoch 9, Batch 100/250, Total Loss: 0.0982, Contrastive Loss: 0.0973, Symmetric Loss: 0.0001, Acc(sim): 0.7188, Acc(dist): 0.7188
+2025-11-02 15:59:51,346 - INFO - Epoch 9, Batch 200/250, Total Loss: 0.0663, Contrastive Loss: 0.0660, Symmetric Loss: 0.0000, Acc(sim): 0.8125, Acc(dist): 0.8125
+2025-11-02 15:59:52,220 - INFO - Starting validation epoch...
+2025-11-02 15:59:52,560 - INFO - Epoch 10 completed in 4.88s
+2025-11-02 15:59:52,560 - INFO - Train Loss: 0.0881, Train Acc: 0.6754
+2025-11-02 15:59:52,560 - INFO - Val Loss: 0.0801, Val Acc: 0.6976
+2025-11-02 15:59:52,690 - INFO - Saved best checkpoint at epoch 9
+2025-11-02 15:59:52,690 - INFO - Saved checkpoint at epoch 9
+2025-11-02 15:59:52,691 - INFO - Performing detailed evaluation...
+2025-11-02 15:59:52,691 - INFO - 开始使用正确的P@K定义评估对比学习模型...
+2025-11-02 15:59:53,007 - INFO - P@2: 0.1875 (正确关联目标: 6, 总目标: 32, 场景数: 16)
+2025-11-02 15:59:53,007 - INFO - P@5: 0.0381 (正确关联目标: 4, 总目标: 105, 场景数: 21)
+2025-11-02 15:59:53,007 - INFO - P@10: 0.0556 (正确关联目标: 10, 总目标: 180, 场景数: 18)
+2025-11-02 15:59:53,007 - INFO - P@15: 0.0476 (正确关联目标: 15, 总目标: 315, 场景数: 21)
+2025-11-02 15:59:53,007 - INFO - P@20: 0.0475 (正确关联目标: 19, 总目标: 400, 场景数: 20)
+2025-11-02 15:59:53,289 - INFO - === 正确P@K评估结果 ===
+2025-11-02 15:59:53,289 - INFO - AP: 0.0523
+2025-11-02 15:59:53,289 - INFO - P@2: 0.1875
+2025-11-02 15:59:53,290 - INFO - P@5: 0.0381
+2025-11-02 15:59:53,290 - INFO - P@10: 0.0556
+2025-11-02 15:59:53,290 - INFO - P@15: 0.0476
+2025-11-02 15:59:53,290 - INFO - P@20: 0.0475
+2025-11-02 15:59:53,290 - INFO - Accuracy: 0.7001
+2025-11-02 15:59:53,291 - INFO - [val] GridSearch best_thr=0.7 acc=0.7490 f1=0.7994
+2025-11-02 15:59:53,297 - INFO - [val] AP=0.8700 AUC=0.9029
+2025-11-02 15:59:53,298 - INFO - Training completed successfully!
+2025-11-02 15:59:53,298 - INFO - Running final detailed evaluation after training...
+2025-11-02 15:59:53,298 - INFO - 开始使用正确的P@K定义评估对比学习模型...
+2025-11-02 15:59:53,599 - INFO - P@2: 0.1875 (正确关联目标: 6, 总目标: 32, 场景数: 16)
+2025-11-02 15:59:53,599 - INFO - P@5: 0.0381 (正确关联目标: 4, 总目标: 105, 场景数: 21)
+2025-11-02 15:59:53,600 - INFO - P@10: 0.0556 (正确关联目标: 10, 总目标: 180, 场景数: 18)
+2025-11-02 15:59:53,600 - INFO - P@15: 0.0476 (正确关联目标: 15, 总目标: 315, 场景数: 21)
+2025-11-02 15:59:53,600 - INFO - P@20: 0.0475 (正确关联目标: 19, 总目标: 400, 场景数: 20)
+2025-11-02 15:59:53,907 - INFO - === 正确P@K评估结果 ===
+2025-11-02 15:59:53,907 - INFO - AP: 0.0523
+2025-11-02 15:59:53,907 - INFO - P@2: 0.1875
+2025-11-02 15:59:53,907 - INFO - P@5: 0.0381
+2025-11-02 15:59:53,907 - INFO - P@10: 0.0556
+2025-11-02 15:59:53,908 - INFO - P@15: 0.0476
+2025-11-02 15:59:53,908 - INFO - P@20: 0.0475
+2025-11-02 15:59:53,908 - INFO - Accuracy: 0.7001
+2025-11-02 15:59:53,908 - INFO - [final] P@2: 0.1875
+2025-11-02 15:59:53,908 - INFO - [final] P@5: 0.0381
+2025-11-02 15:59:53,908 - INFO - [final] P@10: 0.0556
+2025-11-02 15:59:53,908 - INFO - [final] P@15: 0.0476
+2025-11-02 15:59:53,909 - INFO - [final] P@20: 0.0475
+2025-11-02 15:59:53,909 - INFO - [final] AP: 0.0523
+2025-11-02 15:59:53,909 - INFO - Final evaluation completed.

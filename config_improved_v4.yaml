@@ -2,7 +2,7 @@
 # 重点解决特征学习能力不足和预测偏向问题
 
 model:
-  input_dim: 4  # 修正为正确的数据维度
+  input_dim: 6  # 6维输入：[x, y, vx, vy, ax, ay]
   encoder_hidden_dim: 256
   encoder_output_dim: 128
   projection_hidden_dim: 512
@@ -10,7 +10,7 @@ model:
   temperature: 0.05  # 下调温度增强区分度，配合高阈值评估
   encoder_layers: 2
   projection_layers: 4
-  use_dual_projection: true
+  use_dual_projection: false  # 默认使用共享投影头，贴近原论文
   dropout: 0.25  # 适度上调 Dropout，增强正则化
 
 data:

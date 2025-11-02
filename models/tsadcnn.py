@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from .encoder import TrackEncoder
-from .projection import ProjectionHead, DualProjectionHead
+from .projection import ProjectionHead
 
 
 # -----------------------------
@@ -28,7 +28,7 @@ class TSADCNNConfig:
     projection_hidden_dim: int = 128
     projection_output_dim: int = 64
     projection_layers: int = 2
-    use_dual_projection: bool = True   # 原文为双对比投影（时/空）
+    use_dual_projection: bool = False  # 默认使用共享单投影头
 
     # 训练与损失配置（原文对比+对称约束）
     margin: float = 1.0
@@ -109,25 +109,14 @@ class TSADCNN(nn.Module):
         else:
             self.encoder_new = None
 
-        # 投影到对比空间（原文为双投影：时/空）
-        if cfg.use_dual_projection:
-            self.projection_head = DualProjectionHead(
-                input_dim=cfg.encoder_output_dim,
-                hidden_dim=cfg.projection_hidden_dim,
-                output_dim=cfg.projection_output_dim,
-                num_layers=cfg.projection_layers,
-                dropout=cfg.dropout,
-            )
-            self.single_projection = None
-        else:
-            self.projection_head = None
-            self.single_projection = ProjectionHead(
-                input_dim=cfg.encoder_output_dim,
-                hidden_dim=cfg.projection_hidden_dim,
-                output_dim=cfg.projection_output_dim,
-                num_layers=cfg.projection_layers,
-                dropout=cfg.dropout,
-            )
+        # 共享单投影头（推荐默认）
+        self.single_projection = ProjectionHead(
+            input_dim=cfg.encoder_output_dim,
+            hidden_dim=cfg.projection_hidden_dim,
+            output_dim=cfg.projection_output_dim,
+            num_layers=cfg.projection_layers,
+            dropout=cfg.dropout,
+        )
 
     # -------------------------
     # Encoding API (for eval)
@@ -142,11 +131,8 @@ class TSADCNN(nn.Module):
         x = traj_btK[:, :, : self.cfg.input_dim]
         feats, corr = self.encoder(x)
 
-        if self.projection_head is not None:
-            z_t, z_s = self.projection_head(feats)
-            z = F.normalize(z_t + z_s, p=2, dim=1)
-        else:
-            z = F.normalize(self.single_projection(feats), p=2, dim=1)
+        # 共享投影到同一嵌入空间
+        z = F.normalize(self.single_projection(feats), p=2, dim=1)
 
         return z, corr
 
@@ -170,15 +156,9 @@ class TSADCNN(nn.Module):
         else:
             new_feats, new_corr = self.encoder(new_x)
 
-        # 投影到对比空间（原文为双投影，融合后归一化）
-        if self.projection_head is not None:
-            old_t, old_s = self.projection_head(old_feats)
-            new_t, new_s = self.projection_head(new_feats)
-            z_old = F.normalize(old_t + old_s, p=2, dim=1)
-            z_new = F.normalize(new_t + new_s, p=2, dim=1)
-        else:
-            z_old = F.normalize(self.single_projection(old_feats), p=2, dim=1)
-            z_new = F.normalize(self.single_projection(new_feats), p=2, dim=1)
+        # 共享投影到同一嵌入空间，并进行L2归一化
+        z_old = F.normalize(self.single_projection(old_feats), p=2, dim=1)
+        z_new = F.normalize(self.single_projection(new_feats), p=2, dim=1)
 
         # 对比损失（配对距离）
         loss_contrast = contrastive_loss(

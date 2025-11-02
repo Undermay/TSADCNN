@@ -1,0 +1,101 @@
+2025-11-02 16:04:31,677 - INFO - Starting Simplified Contrastive TSADCNN training
+2025-11-02 16:04:31,678 - INFO - Config loaded from config_improved_v4.yaml
+2025-11-02 16:04:31,692 - INFO - Using device: cuda
+2025-11-02 16:04:31,692 - INFO - Auto-aligned similarity_threshold=0.500 from margin=1.0
+2025-11-02 16:04:31,693 - INFO - Creating data loaders...
+2025-11-02 16:04:34,100 - INFO - Applied per-segment MinMax normalization to trajectory pairs
+2025-11-02 16:04:34,101 - INFO - Loaded 20072 trajectory pairs from data/csv/train_correct.csv
+2025-11-02 16:04:34,102 - INFO - Positive pairs: 10036, Negative pairs: 10036
+2025-11-02 16:04:34,102 - INFO - Using 0-1 MinMax normalization (mode=segment) for trajectories
+2025-11-02 16:04:34,344 - INFO - Applied per-segment MinMax normalization to trajectory pairs
+2025-11-02 16:04:34,344 - INFO - Loaded 2064 trajectory pairs from data/csv/test_correct.csv
+2025-11-02 16:04:34,345 - INFO - Positive pairs: 1032, Negative pairs: 1032
+2025-11-02 16:04:34,345 - INFO - Using 0-1 MinMax normalization (mode=segment) for trajectories
+2025-11-02 16:04:34,345 - INFO - Training DataLoader uses SceneGroupedBatchSampler (group_by_scene=True)
+2025-11-02 16:04:34,345 - INFO - Training samples: 20072
+2025-11-02 16:04:34,345 - INFO - Test samples: 2064
+2025-11-02 16:04:34,345 - INFO - Creating model...
+2025-11-02 16:04:34,502 - INFO - Model created with 4554325 parameters
+2025-11-02 16:04:35,767 - INFO - Starting training loop...
+2025-11-02 16:04:35,768 - INFO - Epoch 1/2
+2025-11-02 16:04:41,022 - INFO - Saved best checkpoint at epoch 0
+2025-11-02 16:04:41,022 - INFO - Epoch 1 completed in 5.25s
+2025-11-02 16:04:41,022 - INFO - Train Loss: 0.1901, Val Loss: 0.1912
+2025-11-02 16:04:41,022 - INFO - Train Acc(sim): 0.5014, Val Acc(sim): 0.4962
+2025-11-02 16:04:41,022 - INFO - Train Acc(dist): 0.5014, Val Acc(dist): 0.4962
+2025-11-02 16:04:41,022 - INFO - Epoch 2/2
+2025-11-02 16:04:45,885 - INFO - Epoch 2 completed in 4.86s
+2025-11-02 16:04:45,885 - INFO - Train Loss: 0.1529, Val Loss: 0.2103
+2025-11-02 16:04:45,885 - INFO - Train Acc(sim): 0.5005, Val Acc(sim): 0.4962
+2025-11-02 16:04:45,885 - INFO - Train Acc(dist): 0.5005, Val Acc(dist): 0.4962
+2025-11-02 16:04:45,885 - INFO - Training completed. Running final evaluation...
+2025-11-02 16:04:45,885 - INFO - Running detailed evaluation...
+2025-11-02 16:04:45,885 - INFO - 开始使用正确的P@K定义评估对比学习模型...
+2025-11-02 16:04:46,250 - INFO - P@2: 0.1250 (正确关联目标: 4, 总目标: 32, 场景数: 16)
+2025-11-02 16:04:46,250 - INFO - P@5: 0.1048 (正确关联目标: 11, 总目标: 105, 场景数: 21)
+2025-11-02 16:04:46,250 - INFO - P@10: 0.0556 (正确关联目标: 10, 总目标: 180, 场景数: 18)
+2025-11-02 16:04:46,250 - INFO - P@15: 0.0571 (正确关联目标: 18, 总目标: 315, 场景数: 21)
+2025-11-02 16:04:46,251 - INFO - P@20: 0.0575 (正确关联目标: 23, 总目标: 400, 场景数: 20)
+2025-11-02 16:04:46,571 - INFO - === 正确P@K评估结果 ===
+2025-11-02 16:04:46,571 - INFO - AP: 0.0640
+2025-11-02 16:04:46,571 - INFO - P@2: 0.1250
+2025-11-02 16:04:46,571 - INFO - P@5: 0.1048
+2025-11-02 16:04:46,571 - INFO - P@10: 0.0556
+2025-11-02 16:04:46,572 - INFO - P@15: 0.0571
+2025-11-02 16:04:46,572 - INFO - P@20: 0.0575
+2025-11-02 16:04:46,572 - INFO - Accuracy: 0.5000
+2025-11-02 16:04:46,572 - INFO - P@2: 0.1250
+2025-11-02 16:04:46,572 - INFO - P@5: 0.1048
+2025-11-02 16:04:46,572 - INFO - P@10: 0.0556
+2025-11-02 16:04:46,572 - INFO - P@15: 0.0571
+2025-11-02 16:04:46,572 - INFO - P@20: 0.0575
+2025-11-02 16:04:46,572 - INFO - AP: 0.0640
+2025-11-02 16:04:46,573 - INFO - Training finished successfully!
+2025-11-02 16:09:16,414 - INFO - Starting Simplified Contrastive TSADCNN training
+2025-11-02 16:09:16,414 - INFO - Config loaded from config_improved_v4.yaml
+2025-11-02 16:09:16,432 - INFO - Using device: cuda
+2025-11-02 16:09:16,432 - INFO - Auto-aligned similarity_threshold=0.500 from margin=1.0
+2025-11-02 16:09:16,433 - INFO - Creating data loaders...
+2025-11-02 16:09:18,934 - INFO - Applied per-segment MinMax normalization to trajectory pairs
+2025-11-02 16:09:18,935 - INFO - Loaded 20072 trajectory pairs from data/csv/train_correct.csv
+2025-11-02 16:09:18,936 - INFO - Positive pairs: 10036, Negative pairs: 10036
+2025-11-02 16:09:18,936 - INFO - Using 0-1 MinMax normalization (mode=segment) for trajectories
+2025-11-02 16:09:19,193 - INFO - Applied per-segment MinMax normalization to trajectory pairs
+2025-11-02 16:09:19,194 - INFO - Loaded 2064 trajectory pairs from data/csv/test_correct.csv
+2025-11-02 16:09:19,194 - INFO - Positive pairs: 1032, Negative pairs: 1032
+2025-11-02 16:09:19,194 - INFO - Using 0-1 MinMax normalization (mode=segment) for trajectories
+2025-11-02 16:09:19,194 - INFO - Training DataLoader uses SceneGroupedBatchSampler (group_by_scene=True)
+2025-11-02 16:09:19,194 - INFO - Training samples: 20072
+2025-11-02 16:09:19,194 - INFO - Test samples: 2064
+2025-11-02 16:09:19,195 - INFO - Creating model...
+2025-11-02 16:09:19,355 - INFO - Model created with 4554325 parameters
+2025-11-02 16:09:20,734 - INFO - Starting training loop...
+2025-11-02 16:09:20,734 - INFO - Epoch 1/1
+2025-11-02 16:09:25,949 - INFO - Saved best checkpoint at epoch 0
+2025-11-02 16:09:25,950 - INFO - Epoch 1 completed in 5.22s
+2025-11-02 16:09:25,950 - INFO - Train Loss: 0.1909, Val Loss: 0.1951
+2025-11-02 16:09:25,950 - INFO - Train Acc(sim): 0.5010, Val Acc(sim): 0.4962
+2025-11-02 16:09:25,950 - INFO - Train Acc(dist): 0.5010, Val Acc(dist): 0.4962
+2025-11-02 16:09:25,950 - INFO - Training completed. Running final evaluation...
+2025-11-02 16:09:25,951 - INFO - Running detailed evaluation...
+2025-11-02 16:09:25,951 - INFO - 开始使用正确的P@K定义评估对比学习模型...
+2025-11-02 16:09:26,309 - INFO - P@2: 0.0938 (正确关联目标: 3, 总目标: 32, 场景数: 16)
+2025-11-02 16:09:26,309 - INFO - P@5: 0.0571 (正确关联目标: 6, 总目标: 105, 场景数: 21)
+2025-11-02 16:09:26,309 - INFO - P@10: 0.0500 (正确关联目标: 9, 总目标: 180, 场景数: 18)
+2025-11-02 16:09:26,309 - INFO - P@15: 0.0540 (正确关联目标: 17, 总目标: 315, 场景数: 21)
+2025-11-02 16:09:26,309 - INFO - P@20: 0.0450 (正确关联目标: 18, 总目标: 400, 场景数: 20)
+2025-11-02 16:09:26,616 - INFO - === 正确P@K评估结果 ===
+2025-11-02 16:09:26,616 - INFO - AP: 0.0514
+2025-11-02 16:09:26,616 - INFO - P@2: 0.0938
+2025-11-02 16:09:26,616 - INFO - P@5: 0.0571
+2025-11-02 16:09:26,616 - INFO - P@10: 0.0500
+2025-11-02 16:09:26,617 - INFO - P@15: 0.0540
+2025-11-02 16:09:26,617 - INFO - P@20: 0.0450
+2025-11-02 16:09:26,617 - INFO - Accuracy: 0.5000
+2025-11-02 16:09:26,617 - INFO - P@2: 0.0938
+2025-11-02 16:09:26,617 - INFO - P@5: 0.0571
+2025-11-02 16:09:26,617 - INFO - P@10: 0.0500
+2025-11-02 16:09:26,617 - INFO - P@15: 0.0540
+2025-11-02 16:09:26,617 - INFO - P@20: 0.0450
+2025-11-02 16:09:26,618 - INFO - AP: 0.0514
+2025-11-02 16:09:26,618 - INFO - Training finished successfully!

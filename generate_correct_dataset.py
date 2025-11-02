@@ -17,10 +17,10 @@ import csv
 @dataclass
 class TrajectoryPair:
     """轨迹对数据结构"""
-    old_trajectory: np.ndarray  # [13, 4] - 前13步
-    new_trajectory: np.ndarray  # [13, 4] - 后13步
-    old_raw: np.ndarray         # 未归一化old片段 [13, 4]
-    new_raw: np.ndarray         # 未归一化new片段 [13, 4]
+    old_trajectory: np.ndarray  # [13, 6] - 前13步
+    new_trajectory: np.ndarray  # [13, 6] - 后13步
+    old_raw: np.ndarray         # 未归一化old片段 [13, 6]
+    new_raw: np.ndarray         # 未归一化新片段 [13, 6]
     label: int  # 1=同目标, 0=不同目标
     scene_id: int
     old_target_flag: int  # old轨迹的目标标识
@@ -47,7 +47,7 @@ class MotionGenerator:
             start_vel: 起始速度 [vx, vy]
             
         Returns:
-            trajectory: [steps, 4] - [x, y, vx, vy]
+            trajectory: [steps, 6] - [x, y, vx, vy, ax, ay]
         """
         if start_pos is None:
             start_pos = np.random.uniform(-50, 50, 2)
@@ -56,17 +56,19 @@ class MotionGenerator:
             angle = np.random.uniform(0, 2*np.pi)
             start_vel = speed * np.array([np.cos(angle), np.sin(angle)])
         
-        trajectory = np.zeros((steps, 4))
-        trajectory[0] = np.concatenate([start_pos, start_vel])
+        trajectory = np.zeros((steps, 6))
+        trajectory[0] = np.concatenate([start_pos, start_vel, np.zeros(2)])
         
         for i in range(1, steps):
             pos = trajectory[i-1, :2]
-            vel = trajectory[i-1, 2:]
+            vel = trajectory[i-1, 2:4]
+            acc = np.zeros(2)
             
             if mode == 'CV':
                 # 恒速直线运动
                 new_pos = pos + vel * self.dt
                 new_vel = vel
+                acc = np.zeros(2)
                 
             elif mode == 'CA':
                 # 恒加速度直线运动
@@ -82,20 +84,23 @@ class MotionGenerator:
                 omega = np.random.uniform(0, np.pi/3)  # rad/s
                 new_vel = self._rotate_velocity(vel, omega * self.dt)
                 new_pos = pos + new_vel * self.dt
+                acc = (new_vel - vel) / self.dt
                 
             elif mode == 'CT_MEDIUM':
                 # 中角度匀速转弯 (60-120°/s)
                 omega = np.random.uniform(np.pi/3, 2*np.pi/3)  # rad/s
                 new_vel = self._rotate_velocity(vel, omega * self.dt)
                 new_pos = pos + new_vel * self.dt
+                acc = (new_vel - vel) / self.dt
                 
             elif mode == 'CT_LARGE':
                 # 大角度匀速转弯 (120-180°/s)
                 omega = np.random.uniform(2*np.pi/3, np.pi)  # rad/s
                 new_vel = self._rotate_velocity(vel, omega * self.dt)
                 new_pos = pos + new_vel * self.dt
-                
-            trajectory[i] = np.concatenate([new_pos, new_vel])
+                acc = (new_vel - vel) / self.dt
+            
+            trajectory[i] = np.concatenate([new_pos, new_vel, acc])
         
         return trajectory
     
@@ -353,7 +358,7 @@ def save_dataset(pairs: List[TrajectoryPair], save_path: str):
             'num_negative_pairs': num_negative,
             'num_scenes': unique_scenes,
             'trajectory_length': 13,  # old和new片段的长度
-            'feature_dim': 4,  # [x, y, vx, vy]
+            'feature_dim': 6,  # [x, y, vx, vy, ax, ay]
             'k_range': (2, 20),  # 场景大小范围
             'motion_modes': ['CV', 'CA', 'CT_SMALL', 'CT_MEDIUM', 'CT_LARGE']
         }
@@ -369,7 +374,7 @@ def export_dataset_to_csv(pairs: List[TrajectoryPair], save_csv_path: str) -> No
     """导出纯原始米单位CSV，仅包含 old_raw/new_raw 与元数据。"""
     os.makedirs(os.path.dirname(save_csv_path), exist_ok=True)
     steps = 13
-    feature_names = ['x','y','vx','vy']
+    feature_names = ['x','y','vx','vy','ax','ay']
 
     # 表头（不含任何归一化列）
     header = ['pair_index','scene_id','old_target_flag','new_target_flag','label','motion_mode']

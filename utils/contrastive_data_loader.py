@@ -46,26 +46,26 @@ class ContrastiveTrajectoryDataset(Dataset):
         self.is_training = is_training
         self.normalize = normalize
         self.use_minmax_normalization = use_minmax_normalization
-        # 归一化模式：'global'（全数据）、'scene'（场景级）、'segment'（段级，论文口径）
-        self.normalization_mode = normalization_mode.lower()
+        # 统一归一化模式：仅保留'segment'（段级，论文口径）
+        # 外部传入的normalization_mode将被忽略并归一为segment
+        self.normalization_mode = 'segment'
         
-        # 初始化标准化器
+        # 初始化标准化器与预归一化状态
         self.normalizer = None  # 用于global模式
         self.scene_normalizers = {}  # 用于scene模式：scene_id -> TrajectoryNormalizer
+        self.pre_normalized = False  # 若数据集已离线归一化，运行时跳过
+        self.normalization_mode_meta = None  # 记录数据集内的归一化模式（若存在）
         
         # 加载数据（不进行标准化）
         self.trajectory_pairs = self._load_data()
         
-        # 如果需要MinMax标准化，按模式拟合并应用
-        if self.normalize and self.use_minmax_normalization:
-            if self.normalization_mode == 'global':
-                self._fit_normalizer_global()
-                self._apply_global_minmax_normalization()
-            elif self.normalization_mode == 'scene':
-                self._fit_scene_normalizers()
-                self._apply_scene_minmax_normalization()
-            else:  # 'segment' 默认
-                self._apply_segment_minmax_normalization()
+        # 如果需要MinMax标准化，仅执行段级归一化；若检测到预归一化则跳过
+        if self.normalize and self.use_minmax_normalization and not self.pre_normalized:
+            self._apply_segment_minmax_normalization()
+        elif self.pre_normalized:
+            logging.info(
+                f"Detected pre-normalized dataset, skipping runtime normalization (mode={self.normalization_mode_meta or 'unknown'})."
+            )
         
         logging.info(f"Loaded {len(self.trajectory_pairs)} trajectory pairs from {data_path}")
         
@@ -114,14 +114,18 @@ class ContrastiveTrajectoryDataset(Dataset):
         old_flags = data.get('old_target_flags', np.zeros(len(labels)))
         new_flags = data.get('new_target_flags', np.zeros(len(labels)))
         motion_modes = data.get('motion_modes', ['unknown'] * len(labels))
+        # 检测数据集是否已离线归一化
+        meta = data.get('meta', {}) if isinstance(data.get('meta', {}), dict) else {}
+        self.pre_normalized = bool(meta.get('normalized', False)) or bool(data.get('normalized', False))
+        self.normalization_mode_meta = meta.get('normalization_mode', None)
 
         for i in range(len(labels)):
             old_traj = np.array(old_trajectories[i], dtype=np.float32)
             new_traj = np.array(new_trajectories[i], dtype=np.float32)
             label = int(labels[i])
             
-            # 数据归一化（仅在不使用MinMax标准化时进行）
-            if self.normalize and not self.use_minmax_normalization:
+            # 数据归一化（仅在不使用MinMax标准化、且未预归一化时进行）
+            if self.normalize and not self.use_minmax_normalization and not self.pre_normalized:
                 old_traj = self._normalize_trajectory(old_traj)
                 new_traj = self._normalize_trajectory(new_traj)
             
@@ -140,7 +144,7 @@ class ContrastiveTrajectoryDataset(Dataset):
         return trajectory_pairs
 
     def _load_data_from_csv(self, csv_path: str) -> List[Dict[str, Any]]:
-        """从CSV加载轨迹对数据（raw-only列）。"""
+        """从CSV加载轨迹对数据（raw-only列，自动适配特征维度）。"""
         trajectory_pairs: List[Dict[str, Any]] = []
         with open(csv_path, 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
@@ -154,7 +158,21 @@ class ContrastiveTrajectoryDataset(Dataset):
                     except Exception:
                         pass
             steps = (max(step_candidates) + 1) if step_candidates else int(13)
-            feature_names = ['x','y','vx','vy']
+            # 通过列名推断特征集合，支持 ax/ay
+            detected_features = set()
+            for name in fields:
+                if name.startswith('old_raw_'):
+                    parts = name.split('_')
+                    if len(parts) >= 4:
+                        feat = parts[2]
+                        # 确保是形如 old_raw_<feat>_<t>
+                        try:
+                            int(parts[-1])
+                            detected_features.add(feat)
+                        except Exception:
+                            pass
+            canonical_order = ['x', 'y', 'vx', 'vy', 'ax', 'ay']
+            feature_names = [f for f in canonical_order if f in detected_features] or ['x','y','vx','vy']
             for row in reader:
                 # 解析原始轨迹
                 old_raw = np.zeros((steps, len(feature_names)), dtype=np.float32)
