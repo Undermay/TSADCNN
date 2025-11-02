@@ -2,16 +2,16 @@
 # 重点解决特征学习能力不足和预测偏向问题
 
 model:
-  input_dim: 6  # 6维输入：[x, y, vx, vy, ax, ay]
+  input_dim: 6  # 6维输入：[x, y, vx, vy, ax, ay] - 匹配实际数据维度
   encoder_hidden_dim: 256
   encoder_output_dim: 128
   projection_hidden_dim: 512
-  projection_output_dim: 8
-  temperature: 0.05  # 下调温度增强区分度，配合高阈值评估
+  projection_output_dim: 64  # 从8增加到64，增强嵌入表达能力
+  temperature: 0.1  # 从0.05增加到0.1，降低过度锐化
   encoder_layers: 2
   projection_layers: 4
   use_dual_projection: false  # 默认使用共享投影头，贴近原论文
-  dropout: 0.25  # 适度上调 Dropout，增强正则化
+  dropout: 0.1  # 从0.25降低到0.1，减少过度正则化
 
 data:
   sequence_length: 13
@@ -23,8 +23,8 @@ data:
 
 training:
   epochs: 100  # 从V3的60减少到50
-  learning_rate: 0.0005  # 从V3的0.0001大幅提升至0.0005，激进学习
-  weight_decay: 0.0005  # 从V3的0.001降至0.0005，减少权重衰减
+  learning_rate: 0.01  # 从0.0005大幅提升至0.01，解决梯度过小问题
+  weight_decay: 0.0001  # 从0.0005降至0.0001，进一步减少权重衰减
   warmup_epochs: 5  # 从V3的3增加到5，更长预热
   gradient_clip_norm: 1.0
   mixed_precision: true
@@ -41,8 +41,8 @@ scheduler:
 
 loss:
   type: paper
-  margin: 1.0
-  temperature: 0.05  # 与模型温度参数保持一致
+  margin: 0.5  # 从0.2增加到0.5，增强正负样本区分度
+  temperature: 0.1  # 从0.05增加到0.1，与模型温度参数保持一致
   lambda_sym: 10.0  # 与论文一致，强化对称约束
   gradient_clip_norm: 1.0
   # 更激进的类别平衡损失配置

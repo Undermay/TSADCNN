@@ -31,7 +31,7 @@ class TrackEncoder(nn.Module):
     
     def __init__(
         self, 
-        input_dim: int = 4,  # [x, y, vx, vy] 位置和速度
+        input_dim: int = 6,  # [x, y, vx, vy, ax, ay] 位置、速度和加速度
         hidden_dim: int = 512,
         output_dim: int = 256,
         sequence_length: int = 10,

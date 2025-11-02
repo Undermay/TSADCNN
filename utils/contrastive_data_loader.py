@@ -31,52 +31,39 @@ class ContrastiveTrajectoryDataset(Dataset):
         is_training: bool = True,
         normalize: bool = True,
         use_minmax_normalization: bool = True,
-        normalization_mode: str = 'segment'
+        normalization_mode: str = 'segment'  # 只支持segment模式
     ):
-        """
-        初始化对比学习数据集
-        
-        Args:
-            data_path: 数据文件路径
-            is_training: 是否为训练模式
-            normalize: 是否进行数据归一化
-            use_minmax_normalization: 是否使用0-1标准化（MinMax）
-        """
         self.data_path = data_path
         self.is_training = is_training
         self.normalize = normalize
         self.use_minmax_normalization = use_minmax_normalization
+        
         # 统一归一化模式：仅保留'segment'（段级，论文口径）
-        # 外部传入的normalization_mode将被忽略并归一为segment
+        if normalization_mode != 'segment':
+            logging.warning(f"不支持的归一化模式 '{normalization_mode}'，强制使用 'segment' 模式")
         self.normalization_mode = 'segment'
         
-        # 初始化标准化器与预归一化状态
-        self.normalizer = None  # 用于global模式
-        self.scene_normalizers = {}  # 用于scene模式：scene_id -> TrajectoryNormalizer
-        self.pre_normalized = False  # 若数据集已离线归一化，运行时跳过
+        # 数据存储
+        self.trajectory_pairs = []
+        self.normalizer = None  # 用于segment模式：单一全局标准化器
         self.normalization_mode_meta = None  # 记录数据集内的归一化模式（若存在）
-        
-        # 加载数据（不进行标准化）
-        self.trajectory_pairs = self._load_data()
-        
-        # 如果需要MinMax标准化，仅执行段级归一化；若检测到预归一化则跳过
-        if self.normalize and self.use_minmax_normalization and not self.pre_normalized:
-            self._apply_segment_minmax_normalization()
-        elif self.pre_normalized:
-            logging.info(
-                f"Detected pre-normalized dataset, skipping runtime normalization (mode={self.normalization_mode_meta or 'unknown'})."
-            )
-        
-        logging.info(f"Loaded {len(self.trajectory_pairs)} trajectory pairs from {data_path}")
-        
-        # 统计正负样本数量
-        positive_count = sum(1 for pair in self.trajectory_pairs if pair['label'] == 1)
-        negative_count = len(self.trajectory_pairs) - positive_count
-        logging.info(f"Positive pairs: {positive_count}, Negative pairs: {negative_count}")
-        
-        if self.use_minmax_normalization:
-            logging.info(f"Using 0-1 MinMax normalization (mode={self.normalization_mode}) for trajectories")
 
+        # 统计信息
+        self.pos_count = 0
+        self.neg_count = 0
+
+        # 加载数据
+        self.trajectory_pairs = self._load_data()
+        logging.info(f"加载了 {len(self.trajectory_pairs)} 个轨迹对")
+        logging.info(f"正样本: {self.pos_count}, 负样本: {self.neg_count}")
+
+        # 归一化处理
+        if self.normalize and self.use_minmax_normalization:
+            if not self._check_if_prenormalized():
+                self._apply_segment_minmax_normalization()
+            else:
+                logging.info("数据已预归一化，跳过归一化步骤")
+    
     def _load_data(self) -> List[Dict[str, Any]]:
         """
         加载轨迹对数据
@@ -114,6 +101,7 @@ class ContrastiveTrajectoryDataset(Dataset):
         old_flags = data.get('old_target_flags', np.zeros(len(labels)))
         new_flags = data.get('new_target_flags', np.zeros(len(labels)))
         motion_modes = data.get('motion_modes', ['unknown'] * len(labels))
+        
         # 检测数据集是否已离线归一化
         meta = data.get('meta', {}) if isinstance(data.get('meta', {}), dict) else {}
         self.pre_normalized = bool(meta.get('normalized', False)) or bool(data.get('normalized', False))
@@ -123,6 +111,12 @@ class ContrastiveTrajectoryDataset(Dataset):
             old_traj = np.array(old_trajectories[i], dtype=np.float32)
             new_traj = np.array(new_trajectories[i], dtype=np.float32)
             label = int(labels[i])
+            
+            # 统计正负样本
+            if label == 1:
+                self.pos_count += 1
+            else:
+                self.neg_count += 1
             
             # 数据归一化（仅在不使用MinMax标准化、且未预归一化时进行）
             if self.normalize and not self.use_minmax_normalization and not self.pre_normalized:
@@ -142,6 +136,10 @@ class ContrastiveTrajectoryDataset(Dataset):
             trajectory_pairs.append(pair_data)
         
         return trajectory_pairs
+
+    def _check_if_prenormalized(self) -> bool:
+        """检查数据是否已预归一化"""
+        return getattr(self, 'pre_normalized', False)
 
     def _load_data_from_csv(self, csv_path: str) -> List[Dict[str, Any]]:
         """从CSV加载轨迹对数据（raw-only列，自动适配特征维度）。"""
@@ -181,11 +179,19 @@ class ContrastiveTrajectoryDataset(Dataset):
                     for j, fn in enumerate(feature_names):
                         old_raw[t, j] = float(row.get(f'old_raw_{fn}_{t}', 0.0))
                         new_raw[t, j] = float(row.get(f'new_raw_{fn}_{t}', 0.0))
+                
+                # 统计正负样本
+                label = int(float(row.get('label', 0)))
+                if label == 1:
+                    self.pos_count += 1
+                else:
+                    self.neg_count += 1
+                
                 # 初始轨迹即原始轨迹，归一化在后续步骤完成
                 pair_data = {
                     'old_trajectory': old_raw.copy(),
                     'new_trajectory': new_raw.copy(),
-                    'label': int(float(row.get('label', 0))),
+                    'label': label,
                     'scene_id': int(float(row.get('scene_id', -1))),
                     'old_target_flag': int(float(row.get('old_target_flag', 0))),
                     'new_target_flag': int(float(row.get('new_target_flag', 0))),
@@ -193,80 +199,10 @@ class ContrastiveTrajectoryDataset(Dataset):
                 }
                 trajectory_pairs.append(pair_data)
         return trajectory_pairs
-    
+
     def _fit_normalizer(self):
-        """拟合0-1标准化器"""
-        if not self.trajectory_pairs:
-            return
-            
-        # 收集所有轨迹数据用于拟合标准化器
-        all_trajectories = []
-        for pair in self.trajectory_pairs:
-            all_trajectories.append(pair['old_trajectory'])
-            all_trajectories.append(pair['new_trajectory'])
-        
-        # 转换为numpy数组
-        all_trajectories = np.array(all_trajectories)  # [N, sequence_length, feature_dim]
-        
-        # 拟合标准化器
-        self.normalizer = TrajectoryNormalizer(feature_range=(0.0, 1.0))
-        self.normalizer.fit(all_trajectories)
-        
-        logging.info(f"Fitted MinMax normalizer with range: {self.normalizer.get_params()}")
-    
-    def _fit_normalizer_global(self):
-        """拟合全局0-1标准化器（使用所有轨迹）"""
-        if not self.trajectory_pairs:
-            return
-        all_trajectories = []
-        for pair in self.trajectory_pairs:
-            all_trajectories.append(pair['old_trajectory'])
-            all_trajectories.append(pair['new_trajectory'])
-        all_trajectories = np.array(all_trajectories)
-        self.normalizer = TrajectoryNormalizer(feature_range=(0.0, 1.0))
-        self.normalizer.fit(all_trajectories)
-        logging.info("Fitted global MinMax normalizer")
-
-    def _apply_global_minmax_normalization(self):
-        """应用全局MinMax标准化器到所有轨迹"""
-        if self.normalizer is None:
-            return
-        for pair in self.trajectory_pairs:
-            pair['old_trajectory'] = self.normalizer.transform(pair['old_trajectory'])
-            pair['new_trajectory'] = self.normalizer.transform(pair['new_trajectory'])
-        logging.info("Applied global MinMax normalization to trajectory pairs")
-
-    def _fit_scene_normalizers(self):
-        """为每个场景拟合独立的标准化器（场景级MinMax）"""
-        scene_dict = {}
-        for pair in self.trajectory_pairs:
-            sid = int(pair.get('scene_id', -1))
-            if sid not in scene_dict:
-                scene_dict[sid] = []
-            scene_dict[sid].append(pair['old_trajectory'])
-            scene_dict[sid].append(pair['new_trajectory'])
-        for sid, trajs in scene_dict.items():
-            trajs = np.array(trajs)
-            normalizer = TrajectoryNormalizer(feature_range=(0.0, 1.0))
-            normalizer.fit(trajs)
-            self.scene_normalizers[sid] = normalizer
-        logging.info(f"Fitted scene normalizers for {len(self.scene_normalizers)} scenes")
-
-    def _apply_scene_minmax_normalization(self):
-        """按场景应用MinMax标准化"""
-        if not self.scene_normalizers:
-            return
-        for pair in self.trajectory_pairs:
-            sid = int(pair.get('scene_id', -1))
-            normalizer = self.scene_normalizers.get(sid)
-            if normalizer is None:
-                # 回退到全局未拟合的简单段级
-                pair['old_trajectory'] = self._minmax_per_segment(pair['old_trajectory'])
-                pair['new_trajectory'] = self._minmax_per_segment(pair['new_trajectory'])
-            else:
-                pair['old_trajectory'] = normalizer.transform(pair['old_trajectory'])
-                pair['new_trajectory'] = normalizer.transform(pair['new_trajectory'])
-        logging.info("Applied scene-level MinMax normalization to trajectory pairs")
+        """拟合段级MinMax标准化器（已弃用，直接使用段级归一化）"""
+        logging.info("使用段级归一化，无需拟合全局标准化器")
 
     def _apply_segment_minmax_normalization(self):
         """逐段应用MinMax归一化（论文口径：old/new各自独立归一化）"""
@@ -300,14 +236,8 @@ class ContrastiveTrajectoryDataset(Dataset):
             normalized_trajectory: 归一化后的轨迹
         """
         if self.use_minmax_normalization:
-            # 在MinMax模式下，仅在global/scene路径之外的场景需要此函数，默认退化为段级
-            if self.normalization_mode == 'global' and self.normalizer is not None:
-                return self.normalizer.transform(trajectory)
-            elif self.normalization_mode == 'scene':
-                # 如果有scene id的语境，这里不处理，由批量应用函数负责
-                return trajectory
-            else:
-                return self._minmax_per_segment(trajectory)
+            # 在MinMax模式下，仅使用段级归一化
+            return self._minmax_per_segment(trajectory)
         elif self.normalize:
             # 使用原有的位置归一化方法
             normalized = trajectory.copy()

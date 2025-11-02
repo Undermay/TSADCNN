@@ -13,6 +13,7 @@ from typing import Dict, Any
 import time
 
 import torch
+import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
@@ -22,6 +23,25 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from models.tsadcnn import TSADCNN, TSADCNNConfig
 from utils.contrastive_data_loader import create_contrastive_data_loaders
 from utils.metrics_pak import evaluate_contrastive_model_correct
+
+
+def xavier_init_weights(m):
+    """Xavier/Glorot初始化 - 改善嵌入向量相似度问题"""
+    if isinstance(m, nn.Linear):
+        # Xavier uniform初始化
+        nn.init.xavier_uniform_(m.weight, gain=1.0)
+        if m.bias is not None:
+            # 小的非零偏置，避免对称性
+            nn.init.uniform_(m.bias, -0.01, 0.01)
+    elif isinstance(m, nn.BatchNorm1d):
+        # BatchNorm参数初始化
+        nn.init.constant_(m.weight, 1.0)
+        nn.init.constant_(m.bias, 0.0)
+    elif isinstance(m, nn.Conv2d):
+        # 卷积层使用He初始化
+        nn.init.kaiming_uniform_(m.weight, mode='fan_in', nonlinearity='leaky_relu')
+        if m.bias is not None:
+            nn.init.constant_(m.bias, 0.0)
 
 
 def setup_logging(log_dir: str = "logs"):
@@ -73,7 +93,15 @@ def create_model(config: Dict[str, Any]) -> TSADCNN:
         lambda_symmetric=float(lcfg.get('lambda_sym', 0.1)),
         share_backbone=True,
     )
-    return TSADCNN(cfg)
+    
+    # 创建模型
+    model = TSADCNN(cfg)
+    
+    # 应用Xavier初始化 - 解决嵌入向量过度相似问题
+    model.apply(xavier_init_weights)
+    logging.info("✅ Applied Xavier initialization to improve embedding diversity")
+    
+    return model
 
 
 def compute_accuracy(z_old: torch.Tensor, z_new: torch.Tensor, labels: torch.Tensor, 
