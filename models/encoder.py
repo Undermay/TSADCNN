@@ -99,7 +99,7 @@ class TrackEncoder(nn.Module):
             nn.Linear(output_dim * 2, output_dim)
         )
 
-    def forward(self, track_sequence: torch.Tensor) -> torch.Tensor:
+    def forward(self, track_sequence: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         前向传播
         
@@ -108,6 +108,7 @@ class TrackEncoder(nn.Module):
             
         Returns:
             encoded_features: 编码后的特征 [batch_size, output_dim]
+            correlation_matrix: 相关矩阵 A [batch_size, sequence_length, sequence_length]
         """
         batch_size, seq_len, input_dim = track_sequence.shape
         
@@ -137,7 +138,12 @@ class TrackEncoder(nn.Module):
         
         # 4. 维度提升
         encoded_features = self.dimension_lifting(fused)
-        return encoded_features
+        
+        # 5. 生成相关矩阵A (用于对称约束损失)
+        # 返回完整的batch维度相关矩阵
+        correlation_matrix = Yi  # [batch_size, seq_len, seq_len]
+        
+        return encoded_features, correlation_matrix
 
     def extract_temporal_features(self, track_sequence: torch.Tensor) -> torch.Tensor:
         """单独提取时间特征（论文同构：d→L→tanh→L×L→线性汇聚）"""

@@ -1,276 +1,204 @@
+from dataclasses import dataclass
+from typing import Dict, Optional, Tuple
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Tuple, Dict, Optional
 
 from .encoder import TrackEncoder
-from .projection import DualProjectionHead
+from .projection import ProjectionHead, DualProjectionHead
 
 
+# -----------------------------
+# Config (paper-aligned)
+# -----------------------------
+@dataclass
+class TSADCNNConfig:
+    # 输入与序列配置
+    input_dim: int = 2                 # 原文以轨迹二维坐标为主，可扩展为4
+    sequence_length: int = 13          # 片段长度（按数据集设置）
+
+    # 编码器配置（对应原文 TrackEncoder: 时空特征+相关矩阵）
+    encoder_hidden_dim: int = 128
+    encoder_output_dim: int = 128
+    encoder_layers: int = 2
+    dropout: float = 0.1
+
+    # 投影头配置（对比空间）
+    projection_hidden_dim: int = 128
+    projection_output_dim: int = 64
+    projection_layers: int = 2
+    use_dual_projection: bool = True   # 原文为双对比投影（时/空）
+
+    # 训练与损失配置（原文对比+对称约束）
+    margin: float = 1.0
+    pos_weight: float = 1.0
+    neg_weight: float = 1.0
+    lambda_symmetric: float = 0.1      # 对称约束权重
+
+    # 结构共享（原文默认共享同一编码器）
+    share_backbone: bool = True
+
+
+# -----------------------------
+# Losses (paper-aligned)
+# -----------------------------
+def _pairwise_cosine(z_old: torch.Tensor, z_new: torch.Tensor) -> torch.Tensor:
+    # 逐样本配对余弦相似度（z 已 L2 归一化）
+    return (z_old * z_new).sum(dim=1)
+
+
+def _euclidean_distance_from_cos(cos_sim: torch.Tensor) -> torch.Tensor:
+    # d = sqrt(2 * (1 - cos))，保证非负，数值稳定
+    d_sq = torch.clamp(2.0 * (1.0 - cos_sim), min=0.0)
+    return torch.sqrt(d_sq + 1e-8)
+
+
+def contrastive_loss(
+    z_old: torch.Tensor,
+    z_new: torch.Tensor,
+    labels: torch.Tensor,
+    margin: float,
+    pos_weight: float,
+    neg_weight: float,
+) -> torch.Tensor:
+    # 原文双对比的核心：正样本拉近、负样本推远（margin）
+    cos_sim = _pairwise_cosine(z_old, z_new)
+    d = _euclidean_distance_from_cos(cos_sim)
+
+    l = labels.float()
+    pos_term = l * (d ** 2)
+    neg_term = (1.0 - l) * (F.relu(margin - d) ** 2)
+
+    loss = 0.5 * (pos_weight * pos_term + neg_weight * neg_term)
+    return loss.mean()
+
+
+def symmetric_constraint_from_corr(A: torch.Tensor) -> torch.Tensor:
+    # 原文的对称相关约束：惩罚关联矩阵非对称性
+    # A: [B, L, L]
+    asym = A - A.transpose(1, 2)
+    return (asym ** 2).mean()
+
+
+# -----------------------------
+# TSADCNN (paper-aligned)
+# -----------------------------
 class TSADCNN(nn.Module):
-    """
-    Track Segment Association with Dual Contrast Neural Network
-    
-    TSADCNN主模型，实现双对比学习机制用于轨迹段关联
-    
-    主要特性：
-    1. 时空信息提取模块（TrackEncoder）
-    2. 双投影头（DualProjectionHead）
-    3. 双对比学习损失
-    4. 最近邻关联
-    """
-    
-    def __init__(
-        self,
-        input_dim: int = 4,          # 轨迹点维度 [x, y, vx, vy]
-        sequence_length: int = 10,    # 轨迹段长度
-        encoder_hidden_dim: int = 512,
-        encoder_output_dim: int = 256,
-        projection_hidden_dim: int = 512,
-        projection_output_dim: int = 128,
-        temperature: float = 0.07, #温度参数，控制对比学习中的相似度计算
-        encoder_layers: int = 3,
-        projection_layers: int = 2
-    ):
-        super(TSADCNN, self).__init__()
-        
-        self.input_dim = input_dim
-        self.sequence_length = sequence_length
-        self.temperature = temperature 
-        
-        # 时空信息提取编码器
+    def __init__(self, cfg: TSADCNNConfig):
+        super().__init__()
+        self.cfg = cfg
+
+        # 编码器：默认共享同一骨干（原文设置）
         self.encoder = TrackEncoder(
-            input_dim=input_dim,
-            hidden_dim=encoder_hidden_dim,
-            output_dim=encoder_output_dim,
-            sequence_length=sequence_length,
-            num_layers=encoder_layers
+            input_dim=cfg.input_dim,
+            sequence_length=cfg.sequence_length,
+            hidden_dim=cfg.encoder_hidden_dim,
+            output_dim=cfg.encoder_output_dim,
+            num_layers=cfg.encoder_layers,
         )
-        
-        # 双投影头
-        self.projection_head = DualProjectionHead(
-            input_dim=encoder_output_dim,
-            hidden_dim=projection_hidden_dim,
-            output_dim=projection_output_dim,
-            num_layers=projection_layers
-        )
-        
-    def forward(
-        self, 
-        track_segments: torch.Tensor,
-        return_projections: bool = True
-    ) -> Dict[str, torch.Tensor]:
-        """
-        前向传播
-        
-        Args:
-            track_segments: 轨迹段数据 [batch_size, sequence_length, input_dim]
-            return_projections: 是否返回投影结果
-            
-        Returns:
-            outputs: 包含编码特征和投影结果的字典
-        """
-        # 1. 时空信息提取
-        encoded_features = self.encoder(track_segments)
-        
-        outputs = {
-            'encoded_features': encoded_features
-        }
-        
-        # 2. 双投影（如果需要）
-        if return_projections:
-            temporal_proj, spatial_proj = self.projection_head(encoded_features)
-            outputs.update({
-                'temporal_projection': temporal_proj,
-                'spatial_projection': spatial_proj
-            })
-        
-        return outputs
-    
-    def compute_dual_contrastive_loss(
-        self,
-        temporal_proj: torch.Tensor,
-        spatial_proj: torch.Tensor,
-        labels: torch.Tensor,
-        temporal_weight: float = 0.5,
-        spatial_weight: float = 0.5,
-        margin: float = 1.0
-    ) -> Dict[str, torch.Tensor]:
-        """
-        计算双对比学习损失（严格对齐论文公式23/24/25）
-        
-        - Lc（公式23）：距离优化对比损失 = 1/2*lD² + 1/2*(1-l)[max(0,m-D)]²
-        - Ls（公式24）：对称约束损失 = ΣΣ(aij - aji)²
-        - 总损失（公式25）：L = 10 * Ls + Lc
-        
-        Args:
-            temporal_proj: 时间投影 [batch_size, projection_dim]
-            spatial_proj: 空间投影 [batch_size, projection_dim]
-            labels: 标签 [batch_size]
-            margin: 距离优化的边界参数 m
-        """
-        # 距离优化对比损失（Lc，公式23）
-        Lc = self._compute_distance_contrastive_loss(temporal_proj, spatial_proj, labels, margin)
-        
-        # 对称约束损失（Ls，公式24）
-        Ls = self._compute_symmetric_constraint_loss(temporal_proj, spatial_proj)
-        
-        # 总损失（公式25）
-        total_loss = 10.0 * Ls + Lc
-        
-        return {
-            'total_loss': total_loss,
-            'Ls': Ls,
-            'Lc': Lc,
-            'distance_loss': Lc,
-            'symmetric_loss': Ls,
-            # 保持向后兼容
-            'temporal_loss': Lc * 0.5,  # 近似分配
-            'spatial_loss': Lc * 0.5,
-            'cross_loss': Ls
-        }
-    
-    def _compute_distance_contrastive_loss(
-        self,
-        temporal_proj: torch.Tensor,
-        spatial_proj: torch.Tensor,
-        labels: torch.Tensor,
-        margin: float = 1.0
-    ) -> torch.Tensor:
-        """
-        计算距离优化对比损失（公式23）
-        
-        Lc = 1/2 * l * D² + 1/2 * (1-l) * [max(0, m-D)]²
-        
-        其中：
-        - l: 标签（1表示同一目标，0表示不同目标）
-        - D: 高维空间中的欧几里得距离
-        - m: 边界参数
-        """
-        batch_size = temporal_proj.shape[0]
-        
-        # 计算所有样本对的欧几里得距离
-        # 使用时间和空间投影的平均作为特征表示
-        features = 0.5 * (temporal_proj + spatial_proj)
-        
-        # 计算距离矩阵 D = ||f(xi) - f(xj)||2
-        distance_matrix = torch.cdist(features, features, p=2)
-        
-        # 创建标签掩码
-        labels_expanded = labels.unsqueeze(1)
-        same_label_mask = (labels_expanded == labels_expanded.T).float()
-        diff_label_mask = 1.0 - same_label_mask
-        
-        # 移除对角线（自己与自己的距离）
-        eye_mask = torch.eye(batch_size, device=features.device)
-        same_label_mask = same_label_mask * (1 - eye_mask)
-        diff_label_mask = diff_label_mask * (1 - eye_mask)
-        
-        # 公式23：Lc = 1/2 * l * D² + 1/2 * (1-l) * [max(0, m-D)]²
-        positive_loss = 0.5 * same_label_mask * (distance_matrix ** 2)
-        negative_loss = 0.5 * diff_label_mask * torch.clamp(margin - distance_matrix, min=0) ** 2
-        
-        # 计算平均损失（只考虑有效的样本对）
-        num_positive_pairs = torch.sum(same_label_mask)
-        num_negative_pairs = torch.sum(diff_label_mask)
-        
-        total_positive_loss = torch.sum(positive_loss)
-        total_negative_loss = torch.sum(negative_loss)
-        
-        # 避免除零
-        if num_positive_pairs > 0:
-            avg_positive_loss = total_positive_loss / num_positive_pairs
-        else:
-            avg_positive_loss = torch.tensor(0.0, device=features.device)
-            
-        if num_negative_pairs > 0:
-            avg_negative_loss = total_negative_loss / num_negative_pairs
-        else:
-            avg_negative_loss = torch.tensor(0.0, device=features.device)
-        
-        return avg_positive_loss + avg_negative_loss
-    
-    def _compute_symmetric_constraint_loss(
-        self,
-        temporal_proj: torch.Tensor,
-        spatial_proj: torch.Tensor
-    ) -> torch.Tensor:
-        """
-        计算对称约束损失（公式24）
-        
-        Ls = ΣΣ(aij - aji)²
-        
-        其中aij是相关性矩阵中行i列j的元素
-        通过时间相关性信息提取模块处理后，特征图中行列的元素表示第i个轨迹点与第j个轨迹点之间的相关性
-        """
-        # 计算时间-空间交叉相似度矩阵作为相关性矩阵
-        correlation_matrix = torch.matmul(temporal_proj, spatial_proj.T) / self.temperature
-        
-        # 计算对称性约束：ΣΣ(aij - aji)²
-        symmetric_diff = correlation_matrix - correlation_matrix.T
-        symmetric_loss = torch.sum(symmetric_diff ** 2)
-        
-        # 归一化（除以矩阵元素总数）
-        batch_size = correlation_matrix.shape[0]
-        normalized_loss = symmetric_loss / (batch_size * batch_size)
-        
-        return normalized_loss
-    
-    def associate_tracks( #最邻近实现轨迹段关联
-        self,
-        query_segments: torch.Tensor, #给定查询轨迹段中找到最匹配候选轨迹段 
-        candidate_segments: torch.Tensor,
-        k: int = 1, #返回前k个最近邻
-        distance_metric: str = 'cosine' #使用余弦相似度计算查询与候选轨迹段之间的相似度
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """
-        轨迹段关联 - 使用最近邻方法
-        
-        Args:
-            query_segments: 查询轨迹段 [num_queries, sequence_length, input_dim]
-            candidate_segments: 候选轨迹段 [num_candidates, sequence_length, input_dim]
-            k: 返回前k个最近邻
-            distance_metric: 距离度量方式
-            
-        Returns:
-            indices: 最近邻索引 [num_queries, k]
-            distances: 距离值 [num_queries, k]
-        """
-        with torch.no_grad():
-            # 编码查询和候选轨迹段
-            query_features = self.encoder(query_segments)
-            candidate_features = self.encoder(candidate_segments)
-            
-            # 计算距离矩阵
-            if distance_metric == 'cosine':
-                # 余弦距离
-                query_norm = F.normalize(query_features, p=2, dim=1)
-                candidate_norm = F.normalize(candidate_features, p=2, dim=1)
-                similarity_matrix = torch.matmul(query_norm, candidate_norm.T) #计算余弦相似度，通过对归一化后的查询和候选轨迹段的特征向量进行点积操作，得到相似度矩阵
-                distance_matrix = 1 - similarity_matrix
-            elif distance_metric == 'euclidean':
-                # 欧几里得距离
-                distance_matrix = torch.cdist(query_features, candidate_features, p=2)
-            else:
-                raise ValueError(f"Unsupported distance metric: {distance_metric}")
-            
-            # 找到最近邻
-            distances, indices = torch.topk(
-                distance_matrix, k, dim=1, largest=False
+
+        if not cfg.share_backbone:
+            self.encoder_new = TrackEncoder(
+                input_dim=cfg.input_dim,
+                sequence_length=cfg.sequence_length,
+                hidden_dim=cfg.encoder_hidden_dim,
+                output_dim=cfg.encoder_output_dim,
+                num_layers=cfg.encoder_layers,
             )
-            
-            return indices, distances
-    
-    def get_track_embeddings(self, track_segments: torch.Tensor) -> torch.Tensor:
+        else:
+            self.encoder_new = None
+
+        # 投影到对比空间（原文为双投影：时/空）
+        if cfg.use_dual_projection:
+            self.projection_head = DualProjectionHead(
+                input_dim=cfg.encoder_output_dim,
+                hidden_dim=cfg.projection_hidden_dim,
+                output_dim=cfg.projection_output_dim,
+                num_layers=cfg.projection_layers,
+                dropout=cfg.dropout,
+            )
+            self.single_projection = None
+        else:
+            self.projection_head = None
+            self.single_projection = ProjectionHead(
+                input_dim=cfg.encoder_output_dim,
+                hidden_dim=cfg.projection_hidden_dim,
+                output_dim=cfg.projection_output_dim,
+                num_layers=cfg.projection_layers,
+                dropout=cfg.dropout,
+            )
+
+    # -------------------------
+    # Encoding API (for eval)
+    # -------------------------
+    @torch.no_grad()
+    def encode_trajectory(self, traj_btK: torch.Tensor) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
         """
-        获取轨迹段的嵌入表示
-        
-        Args:
-            track_segments: 轨迹段 [batch_size, sequence_length, input_dim]
-            
-        Returns:
-            embeddings: 嵌入表示 [batch_size, encoder_output_dim]
+        输入：traj_btK [B, T, K]，K>=input_dim
+        输出：embedding [B, D], correlation_matrix [B, T, T]
+        原文接口：编码器产生全局特征 + 时序相关矩阵；投影头将特征映射到对比空间。
         """
-        with torch.no_grad():
-            embeddings = self.encoder(track_segments)
-        return embeddings
+        x = traj_btK[:, :, : self.cfg.input_dim]
+        feats, corr = self.encoder(x)
+
+        if self.projection_head is not None:
+            z_t, z_s = self.projection_head(feats)
+            z = F.normalize(z_t + z_s, p=2, dim=1)
+        else:
+            z = F.normalize(self.single_projection(feats), p=2, dim=1)
+
+        return z, corr
+
+    # -------------------------
+    # Training forward
+    # -------------------------
+    def forward(
+        self,
+        old_btK: torch.Tensor,
+        new_btK: torch.Tensor,
+        labels: torch.Tensor,
+    ) -> Tuple[torch.Tensor, torch.Tensor, Dict[str, torch.Tensor]]:
+        # 裁剪输入维度以匹配编码器
+        old_x = old_btK[:, :, : self.cfg.input_dim]
+        new_x = new_btK[:, :, : self.cfg.input_dim]
+
+        # 编码（共享或非共享骨干）
+        old_feats, old_corr = self.encoder(old_x)
+        if self.encoder_new is not None:
+            new_feats, new_corr = self.encoder_new(new_x)
+        else:
+            new_feats, new_corr = self.encoder(new_x)
+
+        # 投影到对比空间（原文为双投影，融合后归一化）
+        if self.projection_head is not None:
+            old_t, old_s = self.projection_head(old_feats)
+            new_t, new_s = self.projection_head(new_feats)
+            z_old = F.normalize(old_t + old_s, p=2, dim=1)
+            z_new = F.normalize(new_t + new_s, p=2, dim=1)
+        else:
+            z_old = F.normalize(self.single_projection(old_feats), p=2, dim=1)
+            z_new = F.normalize(self.single_projection(new_feats), p=2, dim=1)
+
+        # 对比损失（配对距离）
+        loss_contrast = contrastive_loss(
+            z_old, z_new, labels,
+            margin=self.cfg.margin,
+            pos_weight=self.cfg.pos_weight,
+            neg_weight=self.cfg.neg_weight,
+        )
+
+        # 对称相关约束（原文基于相关矩阵的对称性）
+        loss_sym_old = symmetric_constraint_from_corr(old_corr)
+        loss_sym_new = symmetric_constraint_from_corr(new_corr)
+        loss_sym = 0.5 * (loss_sym_old + loss_sym_new)
+
+        loss_total = loss_contrast + self.cfg.lambda_symmetric * loss_sym
+
+        losses = {
+            "total": loss_total,
+            "contrastive": loss_contrast,
+            "symmetric": loss_sym,
+        }
+
+        return z_old, z_new, losses

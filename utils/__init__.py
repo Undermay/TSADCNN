@@ -1,19 +1,23 @@
 """
-TSADCNN Utils Package
+TSADCNN utils 包入口（精简版）。
 
-包含训练和评估所需的工具模块：
-- data_loader: 数据加载和处理
-- augmentation: 数据增强
-- metrics: 评估指标
+保留当前训练/评估实际使用的工具：
+- contrastive_data_loader: 对比学习数据集与加载器
+- normalization: 归一化工具
+- metrics_pak: 正确口径的对比评估指标
 """
 
-from .data_loader import TrackDataset
-from .augmentation import TrackAugmentation
-from .metrics import compute_association_metrics, compute_scene_precision_and_ap
+from .contrastive_data_loader import ContrastiveTrajectoryDataset, create_contrastive_data_loaders
+from .normalization import TrajectoryNormalizer
+from .metrics_pak import (
+    evaluate_contrastive_model_correct,
+    compute_contrastive_association_metrics_correct,
+)
 
 __all__ = [
-    'TrackDataset',
-    'TrackAugmentation', 
-    'compute_association_metrics',
-    'compute_scene_precision_and_ap'
+    'ContrastiveTrajectoryDataset',
+    'create_contrastive_data_loaders',
+    'TrajectoryNormalizer',
+    'evaluate_contrastive_model_correct',
+    'compute_contrastive_association_metrics_correct',
 ]

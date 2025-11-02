@@ -15,7 +15,8 @@ class ProjectionHead(nn.Module):
         input_dim: int = 256,
         hidden_dim: int = 512,
         output_dim: int = 128,
-        num_layers: int = 2
+        num_layers: int = 2,
+        dropout: float = 0.25
     ):
         super(ProjectionHead, self).__init__()
         
@@ -23,6 +24,7 @@ class ProjectionHead(nn.Module):
         self.hidden_dim = hidden_dim
         self.output_dim = output_dim
         self.num_layers = num_layers
+        self.dropout = dropout
         
         # 构建多层投影网络
         layers = []
@@ -31,12 +33,14 @@ class ProjectionHead(nn.Module):
         layers.append(nn.Linear(input_dim, hidden_dim))
         layers.append(nn.BatchNorm1d(hidden_dim))
         layers.append(nn.ReLU())
+        layers.append(nn.Dropout(self.dropout))
         
         # 中间层
         for _ in range(num_layers - 2):
             layers.append(nn.Linear(hidden_dim, hidden_dim))
             layers.append(nn.BatchNorm1d(hidden_dim))
             layers.append(nn.ReLU())
+            layers.append(nn.Dropout(self.dropout))
         
         # 输出层
         layers.append(nn.Linear(hidden_dim, output_dim))
@@ -73,25 +77,26 @@ class DualProjectionHead(nn.Module):
         input_dim: int = 256,
         hidden_dim: int = 512,
         output_dim: int = 128,
-        num_layers: int = 2
+        num_layers: int = 2,
+        dropout: float = 0.25
     ):
         super(DualProjectionHead, self).__init__()
         
         # 时间对比投影头
         self.temporal_projection = ProjectionHead(
-            input_dim, hidden_dim, output_dim, num_layers
+            input_dim, hidden_dim, output_dim, num_layers, dropout
         )
         
         # 空间对比投影头
         self.spatial_projection = ProjectionHead(
-            input_dim, hidden_dim, output_dim, num_layers
+            input_dim, hidden_dim, output_dim, num_layers, dropout
         )
         
         # 共享特征提取器（可选）
         self.shared_features = nn.Sequential(
             nn.Linear(input_dim, input_dim),  # 保持维度不变
             nn.ReLU(),
-            nn.Dropout(0.1)
+            nn.Dropout(dropout)
         )
         
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
