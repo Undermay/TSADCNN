@@ -270,7 +270,7 @@ def main(args):
         line = (
             f'Epoch {epoch}/{epochs} | '
             f'Train Loss {train_loss:.4f} Acc {train_acc:.4f} | '
-            f'Val Loss {val_loss:.4f} Acc {val_acc:.4f} Top1 {val_top1:.4f} '
+            f'Val Loss {val_loss:.4f} Acc {val_acc:.4f} Top1 {val_top1:.4f} | '
             f'{pk_parts} P@all {pk_overall:.4f}'
         )
         print(line)
