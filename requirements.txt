@@ -1,16 +1,4 @@
-torch>=1.9.0
-torchvision>=0.10.0
-numpy>=1.21.0
-matplotlib>=3.4.0
-tensorboard>=2.6.0
-tqdm>=4.62.0
-scikit-learn>=0.24.0
-pandas>=1.3.0
-seaborn>=0.11.0
-opencv-python>=4.5.0
-Pillow>=8.3.0
-pyyaml>=5.4.0
-
-# 对比学习相关依赖
-scipy>=1.7.0
-plotly>=5.0.0
+# 核心依赖：训练与数据生成
+torch>=2.0
+numpy>=1.24
+PyYAML>=6.0
