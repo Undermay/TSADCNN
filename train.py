@@ -1,4 +1,5 @@
 import os
+import time
 import argparse
 import numpy as np
 import torch
@@ -8,16 +9,6 @@ from data_utils import create_data_loaders
 from model import TSADCNN, contrastive_loss
 
 
-def compute_accuracy(z_old: torch.Tensor, z_new: torch.Tensor, labels: torch.Tensor, margin: float = 0.2) -> float:
-    """
-    基于对比学习距离的准确率：
-    - 预测关联：距离 < margin
-    - 预测不关联：距离 >= margin
-    返回该 batch 的正确比例。
-    """
-    distances = torch.norm(z_old - z_new, dim=1)
-    preds = (distances < margin).long()
-    return (preds == labels).float().mean().item()
 
 
 def eval_linking_top1(model: TSADCNN, dataset, device: torch.device, margin: float = 0.2) -> float:
@@ -59,7 +50,7 @@ def eval_linking_top1(model: TSADCNN, dataset, device: torch.device, margin: flo
     return correct / max(total, 1)
 
 
-def eval_scene_precision_pk(model: TSADCNN, dataset, device: torch.device):
+def eval_scene_precision_pk(model: TSADCNN, dataset, device: torch.device, method: str = 'auto'):
     """
     计算场景级 P@K：
     - 每个场景包含 K 个 old 与 K 个 new 目标（一对一匹配）
@@ -111,15 +102,31 @@ def eval_scene_precision_pk(model: TSADCNN, dataset, device: torch.device):
             # 距离矩阵 [K,K]
             dist_mat = torch.cdist(z_old, z_new, p=2)
 
-            # 匈牙利匹配（若不可用则贪心）
+            # 选择匹配算法：hungarian/greedy/auto（auto 优先匈牙利）
+            use_hungarian = None
+            if method == 'hungarian':
+                use_hungarian = True
+            elif method == 'greedy':
+                use_hungarian = False
+            else:
+                try:
+                    from scipy.optimize import linear_sum_assignment  # noqa: F401
+                    use_hungarian = True
+                except Exception:
+                    use_hungarian = False
+
             row_ind = []
             col_ind = []
-            try:
-                from scipy.optimize import linear_sum_assignment
-                ri, ci = linear_sum_assignment(dist_mat.detach().cpu().numpy())
-                row_ind = list(ri)
-                col_ind = list(ci)
-            except Exception:
+            if use_hungarian:
+                try:
+                    from scipy.optimize import linear_sum_assignment
+                    ri, ci = linear_sum_assignment(dist_mat.detach().cpu().numpy())
+                    row_ind = list(ri)
+                    col_ind = list(ci)
+                except Exception:
+                    use_hungarian = False  # 回退到贪心
+
+            if not use_hungarian:
                 dm = dist_mat.detach().cpu().numpy().copy()
                 assigned_rows = set()
                 assigned_cols = set()
@@ -166,7 +173,6 @@ def eval_scene_precision_pk(model: TSADCNN, dataset, device: torch.device):
 def train_epoch(model: TSADCNN, loader: DataLoader, optimizer: torch.optim.Optimizer, device: torch.device, margin: float = 0.2):
     model.train()
     running_loss = 0.0
-    running_acc = 0.0
     count = 0
     for old_traj, new_traj, labels in loader:
         old_traj = old_traj.to(device)
@@ -182,16 +188,13 @@ def train_epoch(model: TSADCNN, loader: DataLoader, optimizer: torch.optim.Optim
 
         batch_size = labels.size(0)
         running_loss += loss.item() * batch_size
-        batch_acc = compute_accuracy(z_old.detach(), z_new.detach(), labels, margin)
-        running_acc += batch_acc * batch_size  # 样本加权累计
         count += batch_size
-    return running_loss / count, running_acc / count
+    return running_loss / count
 
 
 def eval_epoch(model: TSADCNN, loader: DataLoader, device: torch.device, margin: float = 0.2):
     model.eval()
     running_loss = 0.0
-    running_acc = 0.0
     count = 0
     with torch.no_grad():
         for old_traj, new_traj, labels in loader:
@@ -202,20 +205,18 @@ def eval_epoch(model: TSADCNN, loader: DataLoader, device: torch.device, margin:
             loss = contrastive_loss(z_old, z_new, labels, margin)
             batch_size = labels.size(0)
             running_loss += loss.item() * batch_size
-            batch_acc = compute_accuracy(z_old, z_new, labels, margin)
-            running_acc += batch_acc * batch_size  # 样本加权累计
             count += batch_size
-    return running_loss / count, running_acc / count
+    return running_loss / count
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description='TSADCNN Training')
-    parser.add_argument('--epochs', type=int, default=10, help='Number of training epochs')
+    parser.add_argument('--epochs', type=int, default=100, help='Number of training epochs')
     parser.add_argument('--batch-size', type=int, default=64, help='Batch size')
     parser.add_argument('--lr', type=float, default=1e-3, help='Learning rate')
     parser.add_argument('--weight-decay', type=float, default=1e-4, help='Weight decay')
     parser.add_argument('--num-workers', type=int, default=2, help='DataLoader workers')
-    parser.add_argument('--margin', type=float, default=0.2, help='Contrastive margin')
+    parser.add_argument('--margin', type=float, default=0.9, help='Contrastive margin')
     parser.add_argument('--train-path', type=str, default='data/train_trajectories.npy', help='Train data path')
     parser.add_argument('--test-path', type=str, default='data/test_trajectories.npy', help='Test data path')
     return parser.parse_args()
@@ -226,7 +227,7 @@ def main(args):
     hidden_dim = 128
     num_layers = 2
     conv_channels = 32
-    embed_dim = 64
+    embed_dim = 32
     dropout = 0.1
     batch_size = args.batch_size
     epochs = args.epochs
@@ -256,25 +257,54 @@ def main(args):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
 
     os.makedirs('logs', exist_ok=True)
-    log_path = os.path.join('logs', 'train_metrics.txt')
+    timestamp = time.strftime('%Y%m%d-%H%M%S')
+    # 在文件名加入常用超参数，便于快速区分不同实验
+    log_fname = f'train_metrics_{timestamp}_e{epochs}_bs{batch_size}_lr{lr}_m{margin}.txt'
+    log_path = os.path.join('logs', log_fname)
     print('Starting minimal training...')
+    print(f'Logging to {log_path}')
     lf = open(log_path, 'w', encoding='utf-8')
     for epoch in range(1, epochs + 1):
-        train_loss, train_acc = train_epoch(model, train_loader, optimizer, device, margin)
-        val_loss, val_acc = eval_epoch(model, test_loader, device, margin)
+        train_loss = train_epoch(model, train_loader, optimizer, device, margin)
+        val_loss = eval_epoch(model, test_loader, device, margin)
         # Top-1 链接准确率（按场景+旧目标分组，挑最近候选）
         val_top1 = eval_linking_top1(model, test_loader.dataset, device)
-        # 场景级 P@K（一对一全局匹配）
-        pk_by_k, pk_overall = eval_scene_precision_pk(model, test_loader.dataset, device)
-        pk_parts = ' '.join([f'P@{k} {pk_by_k[k]:.4f}' for k in sorted(pk_by_k.keys())])
+        # 训练集 AP（使用匈牙利）
+        _, pk_overall_train = eval_scene_precision_pk(model, train_loader.dataset, device, method='hungarian')
+        ap_train = pk_overall_train
+        # 验证集 P@K 与 AP（匈牙利）
+        pk_by_k_val_h, pk_overall_val_h = eval_scene_precision_pk(model, test_loader.dataset, device, method='hungarian')
+        ap_val_h = pk_overall_val_h
+        # 验证集 AP（贪心）
+        _, pk_overall_val_g = eval_scene_precision_pk(model, test_loader.dataset, device, method='greedy')
+        ap_val_g = pk_overall_val_g
+        pk_parts = ' '.join([f'P@{k} {pk_by_k_val_h[k]:.4f}' for k in sorted(pk_by_k_val_h.keys())])
         line = (
             f'Epoch {epoch}/{epochs} | '
-            f'Train Loss {train_loss:.4f} Acc {train_acc:.4f} | '
-            f'Val Loss {val_loss:.4f} Acc {val_acc:.4f} Top1 {val_top1:.4f} | '
-            f'{pk_parts} P@all {pk_overall:.4f}'
+            f'Train Loss {train_loss:.4f} AP {ap_train:.4f} | '
+            f'Val Loss {val_loss:.4f} Top1 {val_top1:.4f} AP(H) {ap_val_h:.4f} AP(G) {ap_val_g:.4f} Diff {ap_val_h - ap_val_g:.4f} | '
+            f'{pk_parts}'
         )
         print(line)
         lf.write(line + '\n')
+    # 在日志末尾追加本次训练的参数配置，便于核对与复现
+    lf.write('\nRun Config\n')
+    lf.write(f'epochs={epochs}\n')
+    lf.write(f'batch_size={batch_size}\n')
+    lf.write(f'lr={lr}\n')
+    lf.write(f'weight_decay={weight_decay}\n')
+    lf.write(f'margin={margin}\n')
+    lf.write(f'num_workers={args.num_workers}\n')
+    lf.write(f'train_path={args.train_path}\n')
+    lf.write(f'test_path={args.test_path}\n')
+    lf.write(f'device={device}\n')
+    lf.write('model.feature_dim=6\n')
+    lf.write('model.hidden_dim=128\n')
+    lf.write('model.num_layers=2\n')
+    lf.write('model.conv_channels=32\n')
+    lf.write('model.embed_dim=32\n')
+    lf.write('model.dropout=0.1\n')
+    lf.write('--- end ---\n')
     lf.close()
     print(f'Training complete. Metrics saved to {log_path}')
 

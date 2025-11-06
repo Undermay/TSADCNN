@@ -1,0 +1,19 @@
+Epoch 1/1 | Train Loss 0.0471 AP 0.4456 | Val Loss 0.0335 Top1 0.8964 AP(H) 0.4143 AP(G) 0.3311 Diff 0.0833 | P@2 1.0000 P@5 0.7250 P@10 0.4926 P@15 0.3429 P@20 0.2971
+
+Run Config
+epochs=1
+batch_size=64
+lr=0.001
+weight_decay=0.0001
+margin=0.7
+num_workers=0
+train_path=data/train_trajectories.npy
+test_path=data/test_trajectories.npy
+device=cuda
+model.feature_dim=6
+model.hidden_dim=128
+model.num_layers=2
+model.conv_channels=32
+model.embed_dim=32
+model.dropout=0.1
+--- end ---

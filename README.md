@@ -21,9 +21,17 @@ TSADCNN 最小上手项目
 训练与评估
 - 运行训练：
   - `python train.py`
-- 指标记录：`
-  - 每行格式：`Epoch i/E | Train Loss a Acc b | Val Loss c Acc d Top1 e`
-  - `Acc`：逐对分类准确率（基于距离与 margin 的判定）；
+- 指标记录：
+  - 日志文件按时间戳创建，且带常用超参数前缀：
+    - 规则：`logs/train_metrics_YYYYMMDD-HHMMSS_e{epochs}_bs{batch_size}_lr{lr}_m{margin}.txt`
+    - 示例：`logs/train_metrics_20251105-213843_e1_bs64_lr0.001_m0.7.txt`
+    - 每次训练都会生成新文件，不会覆盖旧日志。
+  - 每行格式：`Epoch i/E | Train Loss a AP_train w1 | Val Loss c Top1 e AP_val w2 | P@2 u P@5 v ...`
+  - 日志末尾会追加本次训练的参数块（Run Config），包含：`epochs`、`batch_size`、`lr`、`weight_decay`、`margin`、`num_workers`、`train_path`、`test_path`、`device` 以及主要模型结构参数，便于对比与复现。
+  - 指标：
+    - `Top1`：链接 Top‑1 准确率（最近邻命中，场景候选内选择距离最小的新轨迹）；
+    - `P@K`：场景级一对一匹配精度（正确配对数 / 该场景目标数 K）；
+    - `AP`：跨所有场景的微平均一对一匹配精度，`AP = (∑ 正确配对数) / (∑ K)`；
   - `Top1`：链接 Top‑1 准确率（对每个旧轨迹在同场景候选中选择“距离最近”的新轨迹，并与真实标签比较）。
 
 核心原理与度量
@@ -31,9 +39,10 @@ TSADCNN 最小上手项目
 - 距离度量：`D = ||z_old - z_new||_2`。
 - 对比损失：
   - 正样本：`D^2`；负样本：`(max(0, margin - D))^2`；总损失为两者平均的 0.5 倍。
-- 准确率：
-  - 逐对 `Acc`：`D < margin` 视为关联，`D >= margin` 视为不关联；按样本数加权聚合为“正确样本数/总样本数”。
+- 评估：
   - `Top1`：按 `(scene_id, old_target_flag)` 分组，对每组在候选新轨迹里选 `D` 最小者；若其标签为 1，记该组正确。
+  - `P@K`：在场景内构建距离矩阵并做一对一全局匹配，统计正确配对比例。
+  - `AP`：跨场景微平均正确配对率（与 `margin` 无关）。
 
 可调整项（在 `train.py`）
 - 训练超参：`batch_size`、`epochs`、`lr`、`weight_decay`、`hidden_dim`、`num_layers`、`conv_channels`、`embed_dim`、`dropout`。
@@ -75,3 +84,8 @@ P@K（场景精度）
   - 与真实标注的“正确配对”比较，统计该场景内“配对正确”的数量；
   - P@K 为该场景的正确配对数 / K；跨数据集可对同 K 的场景做宏平均（或整体微平均）。
 - 与 Top‑K（Hit@K）区别：Top‑K 是“对每个旧轨迹在候选中取前 K 个是否命中”，不要求一对一；P@K 是“在场景内做一对一全局匹配后，正确配对的比例”。
+
+AP（Average Precision，按原文定义）
+- 定义：跨所有场景的微平均正确配对率。
+- 公式：`AP = (∑ 正确配对数) / (∑ 场景目标数K)`，等价于本项目日志中的 `P@all`。
+- 说明：AP 与 `margin` 无关，完全基于一对一全局匹配的结果；相比 `Acc`（逐对阈值分类），AP 更能反映整体场景级关联质量。

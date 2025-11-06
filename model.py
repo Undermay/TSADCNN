@@ -33,7 +33,7 @@ class TemporalCorrelation(nn.Module):
 
     def forward(self, Y: torch.Tensor) -> torch.Tensor:
         # Y: [B, L, H]
-        S = torch.bmm(Y, Y.transpose(1, 2))  # [B, L, L]
+        S = torch.bmm(Y, Y.transpose(1, 2))  # [B, L, L] 其实就是Y的时间序列的内积矩阵 Y^T * Y 然后得到B，L，L 矩阵
         S = S / (self.scale + 1e-6)
         S = torch.tanh(S)
         return S.unsqueeze(1)  # [B, 1, L, L]
@@ -72,11 +72,11 @@ class SpatialExtractor(nn.Module):
         y = self.bn0(y)
         y = self.act(y)
         y = self.block1(y)
-        y = self.act(y)
+        # y = self.act(y)
         y = self.block2(y)
-        y = self.act(y)
+        # y = self.act(y)
         y = self.block3(y)
-        y = self.act(y)
+        # y = self.act(y)
         return y  # [B, C, L, L]
 
 
