@@ -5,11 +5,11 @@ TSADCNN 最小上手项目
 - `train.py`：训练与评估脚本，记录每个 epoch 的指标到 `logs/train_metrics.txt`。
 - `data_utils.py`：数据加载与 `DataLoader` 包装，支持 `.npy` 字典格式数据。
 - `generate_dataset.py`：按文档规范生成场景与轨迹对，可选使用。
-- `data/`：数据文件（`train_trajectories.npy`、`test_trajectories.npy`、`dataset_config.yaml`）。
+- `data/`：数据文件（`train_trajectories.npy`、`test_trajectories.npy`）。
 
 依赖安装
 - `pip install -r requirements.txt`
-- 仅需要：`torch>=2.0`、`numpy>=1.24`、`PyYAML>=6.0`。
+- 仅需要：`torch>=2.0`、`numpy>=1.24`。（评估使用匈牙利算法需 `scipy`，如未安装请另外 `pip install scipy`）
 
 数据准备（可选）
 - 重新生成数据集并写入 `data/`：
@@ -26,13 +26,11 @@ TSADCNN 最小上手项目
     - 规则：`logs/train_metrics_YYYYMMDD-HHMMSS_e{epochs}_bs{batch_size}_lr{lr}_m{margin}.txt`
     - 示例：`logs/train_metrics_20251105-213843_e1_bs64_lr0.001_m0.7.txt`
     - 每次训练都会生成新文件，不会覆盖旧日志。
-  - 每行格式：`Epoch i/E | Train Loss a AP_train w1 | Val Loss c Top1 e AP_val w2 | P@2 u P@5 v ...`
+  - 每行格式：`Epoch i/E | Train Loss a AP_train w1 | Val Loss c AP_val w2 | P@2 u P@3 v P@5 ...`
   - 日志末尾会追加本次训练的参数块（Run Config），包含：`epochs`、`batch_size`、`lr`、`weight_decay`、`margin`、`num_workers`、`train_path`、`test_path`、`device` 以及主要模型结构参数，便于对比与复现。
   - 指标：
-    - `Top1`：链接 Top‑1 准确率（最近邻命中，场景候选内选择距离最小的新轨迹）；
     - `P@K`：场景级一对一匹配精度（正确配对数 / 该场景目标数 K）；
     - `AP`：跨所有场景的微平均一对一匹配精度，`AP = (∑ 正确配对数) / (∑ K)`；
-  - `Top1`：链接 Top‑1 准确率（对每个旧轨迹在同场景候选中选择“距离最近”的新轨迹，并与真实标签比较）。
 
 核心原理与度量
 - 嵌入生成：`TSADCNN.encode` 输出归一化嵌入 `z`（`F.normalize`）。
@@ -40,7 +38,6 @@ TSADCNN 最小上手项目
 - 对比损失：
   - 正样本：`D^2`；负样本：`(max(0, margin - D))^2`；总损失为两者平均的 0.5 倍。
 - 评估：
-  - `Top1`：按 `(scene_id, old_target_flag)` 分组，对每组在候选新轨迹里选 `D` 最小者；若其标签为 1，记该组正确。
   - `P@K`：在场景内构建距离矩阵并做一对一全局匹配，统计正确配对比例。
   - `AP`：跨场景微平均正确配对率（与 `margin` 无关）。
 
@@ -69,7 +66,7 @@ TSADCNN 最小上手项目
   - 按距离升序选出前 K 个候选；
   - 若这 K 个里至少有一个真实标签为 1 （同目标），该旧轨迹计为“命中”；
   - Top‑K = 命中的旧轨迹数 / 全部旧轨迹数。
-- 特例： K=1 即你现在实现的 Top‑1（只看最近的一个）。
+ - 说明：本项目评估以场景级 `P@K` 与总体 `AP` 为主；`Top‑K` 概念用于理解距离排序的命中率但未作为代码指标输出。
 与数据里的“场景K值”的区别
 
 - 数据生成中的 k_values （如 2/5/10/15/20 ）是“每个场景的目标数量”，不是评估指标的 K 。

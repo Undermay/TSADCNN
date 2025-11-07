@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 """
-按照用户文档要求重新实现正确的数据生成逻辑
-- 32步完整轨迹 → 13步old + 13步new轨迹对
+数据生成说明（与当前实现一致）
+- 完整轨迹32步 → old 13步 + new 13步（中间6步间隔）
 - 对比学习：同目标标签1，不同目标标签0
-- 场景K值：{1, 5, 10, 20}
-- 运动模式：CV, CA, CT-small, CT-medium, CT-large
+- 训练集场景K范围：[2, 20]
+- 测试集场景K：默认与训练集范围一致；如需固定集合，可传入
+  {2, 3, 5, 7, 10, 12, 15, 17, 20}
+- 运动模式：CV, CA, CT_SMALL, CT_MEDIUM, CT_LARGE
+- 保留原始米单位片段；当前未做归一化（如需，在数据加载器实现）
 """
 
 import numpy as np
 import os
 from typing import Dict, List, Tuple, Any
-import yaml
 from dataclasses import dataclass
 
 @dataclass
@@ -188,7 +190,7 @@ class TrajectoryPairGenerator:
             old_raw = trajectory[:13]  # 前13步（原始米单位）
             new_raw = trajectory[19:]  # 后13步（原始米单位，跳过中间6步）
             
-            # 保留原始米单位片段，归一化在数据加载器阶段执行
+            # 保留原始米单位片段；当前未做归一化（如需，可在数据加载器中实现）
             old_segment = old_raw.copy()
             new_segment = new_raw.copy()
             
@@ -265,15 +267,18 @@ class TrajectoryPairGenerator:
         modes = self.motion_gen.modes
         k_range = self.scene_gen.k_range
 
-        if test_k_values is None:
-            # 按要求：测试集包含5种场景K=2、5、10、15、20
-            test_k_values = [2, 5, 10, 15, 20]
+        # 测试集K采样策略：
+        # - 若未显式传入集合，则与训练集范围一致按 k_range 采样
+        # - 若显式传入集合，则从该集合采样
         
         print(f"生成{dataset_type}数据集:")
         print(f"  运动模式: {modes}")
         print(f"  每种模式轨迹数: {num_trajectories_per_mode}")
         if dataset_type == 'test':
-            print(f"  场景K值集合(测试集): {test_k_values}")
+            if test_k_values is None:
+                print(f"  场景K采样(测试集)：与训练一致的范围 {k_range}")
+            else:
+                print(f"  场景K值集合(测试集): {test_k_values}")
         else:
             print(f"  场景K值范围(训练集): {k_range}")
         
@@ -281,9 +286,12 @@ class TrajectoryPairGenerator:
             trajectories_generated = 0
             
             while trajectories_generated < num_trajectories_per_mode:
-                # 训练集使用范围采样，测试集使用指定集合采样
+                # K选择：测试集无集合时与训练一致按范围采样
                 if dataset_type == 'test':
-                    k = int(np.random.choice(test_k_values))
+                    if test_k_values is None:
+                        k = np.random.randint(k_range[0], k_range[1] + 1)
+                    else:
+                        k = int(np.random.choice(test_k_values))
                 else:
                     k = np.random.randint(k_range[0], k_range[1] + 1)
                 
@@ -371,17 +379,17 @@ def generate_complete_dataset():
     
     generator = TrajectoryPairGenerator()
     
-    # 生成训练集：每种模式2000条轨迹
+    # 生成训练集：每种模式10000条轨迹（总计约>=50000条对象）
     print("\n1. 生成训练集...")
     train_pairs = generator.generate_dataset(
-        num_trajectories_per_mode=2000,
+        num_trajectories_per_mode=10000,
         dataset_type='train'
     )
     
-    # 生成测试集：每种模式200条轨迹
+    # 生成测试集：每种模式1000条轨迹（总计约>=5000条对象）
     print("\n2. 生成测试集...")
     test_pairs = generator.generate_dataset(
-        num_trajectories_per_mode=200,
+        num_trajectories_per_mode=1000,
         dataset_type='test'
     )
     
@@ -390,34 +398,8 @@ def generate_complete_dataset():
     save_dataset(train_pairs, 'data/train_trajectories.npy')
     save_dataset(test_pairs, 'data/test_trajectories.npy')
     
-    # 生成配置文件
-    config = {
-        'dataset_info': {
-            'description': '按照用户文档要求生成的正确数据集',
-            'data_format': 'old-new轨迹对 + 对比学习标签',
-            'trajectory_length': 32,  # 完整轨迹长度
-            'segment_length': 13,     # old/new片段长度
-            'gap_length': 6,          # 中间间隔长度
-            'motion_modes': ['CV', 'CA', 'CT_SMALL', 'CT_MEDIUM', 'CT_LARGE'],
-            'k_values': [5, 10, 20],
-            'train_trajectories_per_mode': 2000,
-            'test_trajectories_per_mode': 200
-        },
-        'files': {
-            'train': 'train_trajectories.npy',
-            'test': 'test_trajectories.npy'
-        },
-        'usage': {
-            'training': '使用对比学习训练TSADCNN模型',
-            'evaluation': '使用P@K和AP指标评估轨迹关联性能'
-        }
-    }
-    
-    with open('data/dataset_config.yaml', 'w', encoding='utf-8') as f:
-        yaml.dump(config, f, default_flow_style=False, allow_unicode=True)
-    
     print(f"\n=== 数据集生成完成 ===")
-    print(f"配置文件: data/dataset_config.yaml")
+    print("已生成: data/train_trajectories.npy 与 data/test_trajectories.npy（已不再输出 YAML 配置文件）")
 
 if __name__ == "__main__":
     generate_complete_dataset()
