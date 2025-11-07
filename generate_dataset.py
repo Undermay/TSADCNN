@@ -32,9 +32,10 @@ class MotionGenerator:
     """运动模式生成器"""
     
     def __init__(self, dt: float = 0.1):
-        self.dt = dt
+        self.dt = dt #时间步长
         self.modes = ['CV', 'CA', 'CT_SMALL', 'CT_MEDIUM', 'CT_LARGE']
     
+    #生成完整轨迹和运动模式
     def generate_trajectory(self, mode: str, steps: int = 32, 
                           start_pos: np.ndarray = None, 
                           start_vel: np.ndarray = None) -> np.ndarray:
@@ -54,7 +55,7 @@ class MotionGenerator:
             start_pos = np.random.uniform(-50, 50, 2)
         if start_vel is None:
             speed = np.random.uniform(5, 15)  # m/s
-            angle = np.random.uniform(0, 2*np.pi)
+            angle = np.random.uniform(0, 2*np.pi) #方向0-2pi
             start_vel = speed * np.array([np.cos(angle), np.sin(angle)])
         
         trajectory = np.zeros((steps, 6))
@@ -73,8 +74,8 @@ class MotionGenerator:
                 
             elif mode == 'CA':
                 # 恒加速度直线运动
-                acc_mag = np.random.uniform(1, 3)  # m/s²
-                acc_dir = vel / np.linalg.norm(vel)
+                acc_mag = np.random.uniform(1, 3)  # 加速度大小 m/s²
+                acc_dir = vel / np.linalg.norm(vel) #加速度方向
                 acc = acc_mag * acc_dir
                 
                 new_pos = pos + vel * self.dt + 0.5 * acc * self.dt**2
@@ -83,9 +84,9 @@ class MotionGenerator:
             elif mode == 'CT_SMALL':
                 # 小角度匀速转弯 (0-60°/s)
                 omega = np.random.uniform(0, np.pi/3)  # rad/s
-                new_vel = self._rotate_velocity(vel, omega * self.dt)
-                new_pos = pos + new_vel * self.dt
-                acc = (new_vel - vel) / self.dt
+                new_vel = self._rotate_velocity(vel, omega * self.dt) #速度和转角（w*dt）
+                new_pos = pos + new_vel * self.dt #欧拉向前积分
+                acc = (new_vel - vel) / self.dt #差分近似加速度
                 
             elif mode == 'CT_MEDIUM':
                 # 中角度匀速转弯 (60-120°/s)
@@ -107,10 +108,11 @@ class MotionGenerator:
     
     def _rotate_velocity(self, vel: np.ndarray, angle: float) -> np.ndarray:
         """旋转速度向量"""
-        cos_a, sin_a = np.cos(angle), np.sin(angle)
-        rotation_matrix = np.array([[cos_a, -sin_a], [sin_a, cos_a]])
+        cos_a, sin_a = np.cos(angle), np.sin(angle) #多目标解包赋值
+        rotation_matrix = np.array([[cos_a, -sin_a], [sin_a, cos_a]]) #构造2*2的旋转矩阵，
         return rotation_matrix @ vel
 
+# 场景级对象采样及起点分布
 class SceneGenerator:
     """场景生成器"""
     
@@ -123,7 +125,7 @@ class SceneGenerator:
         生成一个场景的所有轨迹，每个轨迹随机选择运动模式
         
         Args:
-            scene_id: 场景ID
+            scene_id: 场景ID                目前实现中并没有在函数体内使用？ 参数目前未在函数体里使用（不是 bug，后续配对器会用 scene_id 打标签）
             k: 场景中的目标数量
             
         Returns:
@@ -137,7 +139,7 @@ class SceneGenerator:
         scene_center = np.random.uniform(-100, 100, 2)
         scene_radius = np.random.uniform(20, 50)
         
-        for target_id in range(k):
+        for target_id in range(k): #循环k次，每次生成一条轨迹
             # 为每个目标随机选择运动模式
             motion_mode = np.random.choice(self.motion_gen.modes)
             motion_modes.append(motion_mode)
@@ -145,7 +147,7 @@ class SceneGenerator:
             # 在场景区域内随机选择起始位置
             angle = np.random.uniform(0, 2*np.pi)
             radius = np.random.uniform(0, scene_radius)
-            start_pos = scene_center + radius * np.array([np.cos(angle), np.sin(angle)])
+            start_pos = scene_center + radius * np.array([np.cos(angle), np.sin(angle)]) #“极坐标 → 笛卡尔坐标”的转换，并把结果平移到场景中心
             
             # 生成轨迹
             trajectory = self.motion_gen.generate_trajectory(
@@ -155,7 +157,7 @@ class SceneGenerator:
             )
             trajectories.append(trajectory)
             
-        return trajectories, motion_modes
+        return trajectories, motion_modes #返回的两个列表随后用于构建正/负样本对
 
 class TrajectoryPairGenerator:
     """轨迹对生成器"""
@@ -212,7 +214,7 @@ class TrajectoryPairGenerator:
                 new_target_flag=target_flags[i],
                 motion_mode=trajectory_motion_modes[i]
             )
-            pairs.append(pair)
+            pairs.append(pair) #把构造好的正样本加入pairs列表
         
         # 生成负样本对（不同目标）
         # 只有当场景中有多个目标时才生成负样本

@@ -140,7 +140,7 @@ def parse_args():
     parser.add_argument('--lr', type=float, default=1e-3, help='Learning rate')
     parser.add_argument('--weight-decay', type=float, default=1e-4, help='Weight decay')
     parser.add_argument('--num-workers', type=int, default=2, help='DataLoader workers')
-    parser.add_argument('--margin', type=float, default=2.5, help='Contrastive margin') #尝试大的margin：0.9sec，1.3first， 1.5sota， 1.8 down sota 2.0也行 
+    parser.add_argument('--margin', type=float, default=1.5, help='Contrastive margin') #尝试大的margin：0.9sec，1.3first， 1.5sota， 1.8 down sota 2.0也行 
     parser.add_argument('--train-path', type=str, default='data/train_trajectories.npy', help='Train data path')
     parser.add_argument('--test-path', type=str, default='data/test_trajectories.npy', help='Test data path')
     return parser.parse_args()
