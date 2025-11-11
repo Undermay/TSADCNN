@@ -21,6 +21,10 @@ TSADCNN 最小上手项目
 训练与评估
 - 运行训练：
   - `python train.py`
+  - 归一化选项：`--normalize {embed|minmax|both}`，默认 `both`
+    - `embed`：仅启用嵌入 L2 归一化（`F.normalize`）。
+    - `minmax`：仅启用输入特征 Min‑Max 归一化（基于训练集统计，验证/测试共享）。
+    - `both`：同时启用输入 Min‑Max 与嵌入 L2（推荐默认）。
 - 指标记录：
   - 日志文件按时间戳创建，且带常用超参数前缀：
     - 规则：`logs/train_metrics_YYYYMMDD-HHMMSS_e{epochs}_bs{batch_size}_lr{lr}_m{margin}.txt`
@@ -45,6 +49,7 @@ TSADCNN 最小上手项目
 - 训练超参：`batch_size`、`epochs`、`lr`、`weight_decay`、`hidden_dim`、`num_layers`、`conv_channels`、`embed_dim`、`dropout`。
 - 准确率与损失的 `margin`：与嵌入分布相关，可在验证集上扫 `0.1–1.0` 选择最优；归一化嵌入下，`margin=0.2` 较严格。
 - DataLoader 并行：Windows 如遇多进程问题，可在 `create_data_loaders(..., num_workers=0)`。
+ - 归一化：`--normalize` 支持 `embed|minmax|both`，默认 `both`；不再提供 `none` 选项。
 
 常见问题排查
 - 训练脚本退出码非零：
@@ -86,3 +91,22 @@ AP（Average Precision，按原文定义）
 - 定义：跨所有场景的微平均正确配对率。
 - 公式：`AP = (∑ 正确配对数) / (∑ 场景目标数K)`，等价于本项目日志中的 `P@all`。
 - 说明：AP 与 `margin` 无关，完全基于一对一全局匹配的结果；相比 `Acc`（逐对阈值分类），AP 更能反映整体场景级关联质量。
+
+改动说明
+
+- 脚本更新： export_csv.py 默认使用 --mode strict
+- 输出文件：
+  - data/train_dataset.csv
+  - data/test_dataset.csv
+- 每一行对应一个样本对，数组字段以 JSON 字符串写入，保留原始形状 [13,6]
+- 字段包含：
+  - split 、 pair_index 、 scene_id 、 label 、 old_flag 、 new_flag 、 motion_mode
+  - old_trajectory_json 、 new_trajectory_json
+  - old_raw_json 、 new_raw_json （若原始米单位片段存在则写入，否则为空）
+使用方式
+
+- 严格镜像（默认）
+  - python export_csv.py --out-dir data --mode strict
+- 如果你仍需之前的“长表/元信息”两类 CSV，可以使用：
+  - python export_csv.py --out-dir data --mode long
+  - 会生成 train_pairs.csv 、 train_trajectories.csv 、 test_pairs.csv 、 test_trajectories.csv

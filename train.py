@@ -133,16 +133,49 @@ def eval_epoch(model: TSADCNN, loader: DataLoader, device: torch.device, margin:
     return running_loss / count
 
 
+def compute_neg_distance_stats(model: TSADCNN, loader: DataLoader, device: torch.device, margin: float):
+    """
+    统计负样本的距离分布与低于 margin 的比例，用于诊断 Val loss 偏大的原因。
+    返回：dict，例如 { 'neg_q50': 0.9, 'neg_q75': 1.1, 'neg_q90': 1.4, 'neg_ratio_below_margin': 0.62 }
+    """
+    model.eval()
+    dists_neg = []
+    with torch.no_grad():
+        for old_traj, new_traj, labels in loader:
+            old_traj = old_traj.to(device)
+            new_traj = new_traj.to(device)
+            labels = labels.to(device)
+            z_old, z_new = model(old_traj, new_traj)
+            d = torch.norm(z_old - z_new, dim=1)  # 欧氏距离
+            mask_neg = (labels == 0)
+            if mask_neg.any():
+                dists_neg.append(d[mask_neg].detach().cpu().numpy())
+    if len(dists_neg) == 0:
+        return {'neg_q50': float('nan'), 'neg_q75': float('nan'), 'neg_q90': float('nan'), 'neg_ratio_below_margin': float('nan')}
+    d_all = np.concatenate(dists_neg, axis=0)
+    q50 = float(np.percentile(d_all, 50))
+    q75 = float(np.percentile(d_all, 75))
+    q90 = float(np.percentile(d_all, 90))
+    ratio_below = float(np.mean(d_all < margin))
+    return {
+        'neg_q50': q50,
+        'neg_q75': q75,
+        'neg_q90': q90,
+        'neg_ratio_below_margin': ratio_below,
+    }
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description='TSADCNN Training')
     parser.add_argument('--epochs', type=int, default=100, help='Number of training epochs')
     parser.add_argument('--batch-size', type=int, default=64, help='Batch size')
-    parser.add_argument('--lr', type=float, default=1e-3, help='Learning rate')
+    parser.add_argument('--lr', type=float, default=5e-4, help='Learning rate')
     parser.add_argument('--weight-decay', type=float, default=1e-4, help='Weight decay')
     parser.add_argument('--num-workers', type=int, default=2, help='DataLoader workers')
-    parser.add_argument('--margin', type=float, default=1.5, help='Contrastive margin') #尝试大的margin：0.9sec，1.3first， 1.5sota， 1.8 down sota 2.0也行 
+    parser.add_argument('--margin', type=float, default=1.3, help='Contrastive margin') #尝试大的margin：1.5 
     parser.add_argument('--train-path', type=str, default='data/train_trajectories.npy', help='Train data path')
     parser.add_argument('--test-path', type=str, default='data/test_trajectories.npy', help='Test data path')
+    parser.add_argument('--normalize', type=str, default='embed', choices=['embed', 'minmax', 'both'], help='Normalization: embed (L2 only), input Min-Max, or both')
     return parser.parse_args()
 
 
@@ -159,16 +192,26 @@ def main(args):
     weight_decay = args.weight_decay
     margin = args.margin
     # 仅展示的验证K集合（日志输出过滤用）
-    display_k_values = [2, 3, 5, 7, 10, 12, 15, 17, 20]
+    # 仅展示指定K集合的P@K，测试为：2,5,10,20,50,100,200（去除150）
+    display_k_values = [2, 5, 10, 20, 50, 100, 200]
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'Using device: {device}')
+
+    # decide normalization strategy
+    normalize_mode = args.normalize
+    # L2 embed normalization is enabled for 'embed' and 'both'
+    normalize_embed = (normalize_mode in ('embed', 'both'))
+
+    # Input Min-Max normalization is enabled for 'minmax' and 'both'
+    input_norm_mode = 'minmax' if normalize_mode in ('minmax', 'both') else 'none'
 
     train_loader, test_loader = create_data_loaders(
         train_path=args.train_path,
         test_path=args.test_path,
         batch_size=batch_size,
         num_workers=args.num_workers,
+        normalize_input=input_norm_mode
     )
 
     model = TSADCNN(
@@ -178,6 +221,7 @@ def main(args):
         conv_channels=conv_channels,
         embed_dim=embed_dim,
         dropout=dropout,
+        normalize_embed=normalize_embed,
     ).to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
@@ -192,6 +236,8 @@ def main(args):
     lf = open(log_path, 'w', encoding='utf-8')
     for epoch in range(1, epochs + 1):
         train_loss = train_epoch(model, train_loader, optimizer, device, margin)
+        # 训练集负样本距离分布（诊断）
+        stats_train = compute_neg_distance_stats(model, train_loader, device, margin)
         val_loss = eval_epoch(model, test_loader, device, margin)
         # 训练集 AP（匈牙利）
         _, pk_overall_train = eval_scene_precision_pk(model, train_loader.dataset, device, method='hungarian')
@@ -199,9 +245,11 @@ def main(args):
         # 验证集 P@K 与 AP（匈牙利）
         pk_by_k_val, pk_overall_val = eval_scene_precision_pk(model, test_loader.dataset, device, method='hungarian')
         ap_val = pk_overall_val
-        # 仅打印指定集合中的K，减少输出噪音
-        _keys = [k for k in sorted(pk_by_k_val.keys()) if k in display_k_values]
-        pk_parts = ' '.join([f'P@{k} {pk_by_k_val[k]:.4f}' for k in _keys])
+        # 仅打印指定集合中的K，若当轮不存在该K则显示 N/A，减少歧义
+        pk_parts = ' '.join([
+            (f'P@{k} {pk_by_k_val[k]:.4f}' if k in pk_by_k_val else f'P@{k} N/A')
+            for k in display_k_values
+        ])
         line = (
             f'Epoch {epoch}/{epochs} | '
             f'Train Loss {train_loss:.4f} AP {ap_train:.4f} | '
@@ -210,6 +258,21 @@ def main(args):
         )
         print(line)
         lf.write(line + '\n')
+
+        # 附加诊断：验证集负样本距离分布与 margin 违反比例
+        stats_val = compute_neg_distance_stats(model, test_loader, device, margin)
+        diag_line_train = (
+            f'TrainNegDist q50 {stats_train["neg_q50"]:.4f} q75 {stats_train["neg_q75"]:.4f} q90 {stats_train["neg_q90"]:.4f} '
+            f'below_margin_ratio {stats_train["neg_ratio_below_margin"]:.4f}'
+        )
+        diag_line_val = (
+            f'ValNegDist   q50 {stats_val["neg_q50"]:.4f} q75 {stats_val["neg_q75"]:.4f} q90 {stats_val["neg_q90"]:.4f} '
+            f'below_margin_ratio {stats_val["neg_ratio_below_margin"]:.4f}'
+        )
+        print(diag_line_train)
+        print(diag_line_val)
+        lf.write(diag_line_train + '\n')
+        lf.write(diag_line_val + '\n')
     # 在日志末尾追加本次训练的参数配置，便于核对与复现
     lf.write('\nRun Config\n')
     lf.write(f'epochs={epochs}\n')
@@ -221,12 +284,14 @@ def main(args):
     lf.write(f'train_path={args.train_path}\n')
     lf.write(f'test_path={args.test_path}\n')
     lf.write(f'device={device}\n')
-    lf.write('model.feature_dim=6\n')
-    lf.write('model.hidden_dim=128\n')
-    lf.write('model.num_layers=2\n')
-    lf.write('model.conv_channels=32\n')
-    lf.write('model.embed_dim=32\n')
-    lf.write('model.dropout=0.1\n')
+    # 记录实际使用的模型超参数（避免与代码修改不一致）
+    lf.write(f'model.feature_dim={feature_dim}\n')
+    lf.write(f'model.hidden_dim={hidden_dim}\n')
+    lf.write(f'model.num_layers={num_layers}\n')
+    lf.write(f'model.conv_channels={conv_channels}\n')
+    lf.write(f'model.embed_dim={embed_dim}\n')
+    lf.write(f'model.dropout={dropout}\n')
+    lf.write(f'normalize_mode={normalize_mode}\n')
     lf.write('--- end ---\n')
     lf.close()
     print(f'Training complete. Metrics saved to {log_path}')

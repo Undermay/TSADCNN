@@ -3,9 +3,9 @@
 数据生成说明（与当前实现一致）
 - 完整轨迹32步 → old 13步 + new 13步（中间6步间隔）
 - 对比学习：同目标标签1，不同目标标签0
-- 训练集场景K范围：[2, 20]
-- 测试集场景K：默认与训练集范围一致；如需固定集合，可传入
-  {2, 3, 5, 7, 10, 12, 15, 17, 20}
+ - 训练集场景K范围：[2, 200]
+ - 测试集场景K：默认与训练集范围一致；如需固定集合，可传入
+   {2, 5, 10, 20, 50, 100, 200}
 - 运动模式：CV, CA, CT_SMALL, CT_MEDIUM, CT_LARGE
 - 保留原始米单位片段；当前未做归一化（如需，在数据加载器实现）
 """
@@ -118,7 +118,7 @@ class SceneGenerator:
     
     def __init__(self, motion_generator: MotionGenerator):
         self.motion_gen = motion_generator
-        self.k_range = (2, 20)  # 每个场景的目标数量范围：2到20个
+        self.k_range = (2, 200)  # 每个场景的目标数量范围：2到200个
         
     def generate_scene(self, scene_id: int, k: int) -> Tuple[List[np.ndarray], List[str]]:
         """
@@ -286,14 +286,20 @@ class TrajectoryPairGenerator:
         
         for mode in modes:
             trajectories_generated = 0
+            # 测试集固定K集合时使用轮循，保证覆盖到每个指定的K
+            cycle_idx = 0 if (dataset_type == 'test' and test_k_values is not None) else None
             
             while trajectories_generated < num_trajectories_per_mode:
-                # K选择：测试集无集合时与训练一致按范围采样
+                # K选择：测试集无集合时与训练一致按范围采样；传入固定集合时轮循采样
                 if dataset_type == 'test':
                     if test_k_values is None:
                         k = np.random.randint(k_range[0], k_range[1] + 1)
                     else:
-                        k = int(np.random.choice(test_k_values))
+                        if cycle_idx is None:
+                            k = int(np.random.choice(test_k_values))
+                        else:
+                            k = int(test_k_values[cycle_idx % len(test_k_values)])
+                            cycle_idx += 1
                 else:
                     k = np.random.randint(k_range[0], k_range[1] + 1)
                 
@@ -363,7 +369,7 @@ def save_dataset(pairs: List[TrajectoryPair], save_path: str):
             'num_scenes': unique_scenes,
             'trajectory_length': 13,  # old和new片段的长度
             'feature_dim': 6,  # [x, y, vx, vy, ax, ay]
-            'k_range': (2, 20),  # 场景大小范围
+            'k_range': (2, 200),  # 场景大小范围
             'motion_modes': ['CV', 'CA', 'CT_SMALL', 'CT_MEDIUM', 'CT_LARGE']
         }
     }
@@ -392,7 +398,8 @@ def generate_complete_dataset():
     print("\n2. 生成测试集...")
     test_pairs = generator.generate_dataset(
         num_trajectories_per_mode=1000,
-        dataset_type='test'
+        dataset_type='test',
+        test_k_values=[2, 5, 10, 20, 50, 100, 200]
     )
     
     # 保存数据集（保存为NPY）

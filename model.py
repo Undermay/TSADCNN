@@ -81,7 +81,7 @@ class SpatialExtractor(nn.Module):
 
 
 class TSADCNN(nn.Module):
-    def __init__(self, input_dim: int, hidden_dim: int, num_layers: int, conv_channels: int, embed_dim: int, dropout: float):
+    def __init__(self, input_dim: int, hidden_dim: int, num_layers: int, conv_channels: int, embed_dim: int, dropout: float, normalize_embed: bool = True):
         super().__init__()
         # Temporal correlation module
         self.encoder = Encoder(input_dim=input_dim, hidden_dim=hidden_dim, num_layers=num_layers)
@@ -96,6 +96,8 @@ class TSADCNN(nn.Module):
             nn.Dropout(dropout),
             nn.Linear(128, embed_dim)
         )
+        # whether to L2-normalize embeddings
+        self.normalize_embed = normalize_embed
 
     def encode(self, traj: torch.Tensor) -> torch.Tensor:
         Y = self.encoder(traj)            # [B, L, H]
@@ -103,7 +105,8 @@ class TSADCNN(nn.Module):
         Fmap = self.spatial(S)            # [B, C, L, L]
         pooled = F.adaptive_avg_pool2d(Fmap, (1, 1)).squeeze(-1).squeeze(-1)  # [B, C]
         z = self.head(pooled)             # [B, E]
-        z = F.normalize(z, dim=1)
+        if self.normalize_embed:
+            z = F.normalize(z, dim=1)
         return z
 
     def forward(self, old_traj: torch.Tensor, new_traj: torch.Tensor):

@@ -1,0 +1,319 @@
+Epoch 1/100 | Train Loss 0.0939 AP 0.1984 | Val Loss 0.0637 AP 0.2300 | P@2 0.9333 P@5 0.8933 P@10 0.7733 P@20 0.6700 P@50 0.3680 P@100 0.2073 P@200 0.1120
+TrainNegDist q50 1.4349 q75 1.7160 q90 1.8649 below_margin_ratio 0.4108
+ValNegDist   q50 1.4393 q75 1.7137 q90 1.8648 below_margin_ratio 0.3984
+Epoch 2/100 | Train Loss 0.0612 AP 0.2941 | Val Loss 0.0527 AP 0.3204 | P@2 1.0000 P@5 0.9733 P@10 0.7933 P@20 0.7667 P@50 0.4720 P@100 0.3173 P@200 0.1927
+TrainNegDist q50 1.4351 q75 1.6901 q90 1.8396 below_margin_ratio 0.3971
+ValNegDist   q50 1.4392 q75 1.6848 q90 1.8368 below_margin_ratio 0.3960
+Epoch 3/100 | Train Loss 0.0490 AP 0.3956 | Val Loss 0.0423 AP 0.4160 | P@2 1.0000 P@5 0.9467 P@10 0.8467 P@20 0.8167 P@50 0.5613 P@100 0.3693 P@200 0.3223
+TrainNegDist q50 1.3938 q75 1.6364 q90 1.7853 below_margin_ratio 0.3773
+ValNegDist   q50 1.3901 q75 1.6236 q90 1.7786 below_margin_ratio 0.3790
+Epoch 4/100 | Train Loss 0.0426 AP 0.4310 | Val Loss 0.0370 AP 0.4448 | P@2 1.0000 P@5 0.8933 P@10 0.8667 P@20 0.8500 P@50 0.5973 P@100 0.4380 P@200 0.3317
+TrainNegDist q50 1.4103 q75 1.5822 q90 1.7628 below_margin_ratio 0.3359
+ValNegDist   q50 1.4092 q75 1.5797 q90 1.7533 below_margin_ratio 0.3395
+Epoch 5/100 | Train Loss 0.0389 AP 0.4841 | Val Loss 0.0329 AP 0.4968 | P@2 1.0000 P@5 1.0000 P@10 0.8867 P@20 0.8633 P@50 0.6253 P@100 0.4980 P@200 0.3903
+TrainNegDist q50 1.4184 q75 1.5929 q90 1.7628 below_margin_ratio 0.3286
+ValNegDist   q50 1.4159 q75 1.5807 q90 1.7537 below_margin_ratio 0.3321
+Epoch 6/100 | Train Loss 0.0368 AP 0.5500 | Val Loss 0.0301 AP 0.5695 | P@2 1.0000 P@5 0.9467 P@10 0.9200 P@20 0.8733 P@50 0.6813 P@100 0.5833 P@200 0.4730
+TrainNegDist q50 1.4161 q75 1.5855 q90 1.7838 below_margin_ratio 0.3223
+ValNegDist   q50 1.4099 q75 1.5835 q90 1.7736 below_margin_ratio 0.3364
+Epoch 7/100 | Train Loss 0.0338 AP 0.5814 | Val Loss 0.0265 AP 0.6124 | P@2 1.0000 P@5 0.9733 P@10 0.8733 P@20 0.9033 P@50 0.7120 P@100 0.6253 P@200 0.5260
+TrainNegDist q50 1.4122 q75 1.5979 q90 1.7728 below_margin_ratio 0.3171
+ValNegDist   q50 1.4038 q75 1.5931 q90 1.7674 below_margin_ratio 0.3287
+Epoch 8/100 | Train Loss 0.0321 AP 0.5959 | Val Loss 0.0248 AP 0.6026 | P@2 1.0000 P@5 0.9467 P@10 0.8800 P@20 0.8667 P@50 0.7267 P@100 0.6260 P@200 0.5070
+TrainNegDist q50 1.4220 q75 1.6006 q90 1.7633 below_margin_ratio 0.3050
+ValNegDist   q50 1.4148 q75 1.5973 q90 1.7561 below_margin_ratio 0.3171
+Epoch 9/100 | Train Loss 0.0305 AP 0.5454 | Val Loss 0.0270 AP 0.5764 | P@2 1.0000 P@5 0.9467 P@10 0.8533 P@20 0.8800 P@50 0.6760 P@100 0.5853 P@200 0.4893
+TrainNegDist q50 1.4195 q75 1.5816 q90 1.7468 below_margin_ratio 0.2926
+ValNegDist   q50 1.4181 q75 1.5797 q90 1.7420 below_margin_ratio 0.2941
+Epoch 10/100 | Train Loss 0.0299 AP 0.5972 | Val Loss 0.0240 AP 0.6041 | P@2 1.0000 P@5 0.9467 P@10 0.8800 P@20 0.8800 P@50 0.6933 P@100 0.6287 P@200 0.5157
+TrainNegDist q50 1.4188 q75 1.5671 q90 1.7713 below_margin_ratio 0.2816
+ValNegDist   q50 1.4178 q75 1.5625 q90 1.7723 below_margin_ratio 0.2849
+Epoch 11/100 | Train Loss 0.0291 AP 0.6124 | Val Loss 0.0232 AP 0.6310 | P@2 1.0000 P@5 1.0000 P@10 0.9333 P@20 0.9200 P@50 0.7253 P@100 0.6427 P@200 0.5447
+TrainNegDist q50 1.4029 q75 1.5613 q90 1.7871 below_margin_ratio 0.3051
+ValNegDist   q50 1.4010 q75 1.5603 q90 1.7837 below_margin_ratio 0.3142
+Epoch 12/100 | Train Loss 0.0285 AP 0.5938 | Val Loss 0.0239 AP 0.6047 | P@2 1.0000 P@5 1.0000 P@10 0.9000 P@20 0.9200 P@50 0.7133 P@100 0.6067 P@200 0.5163
+TrainNegDist q50 1.4101 q75 1.5688 q90 1.7581 below_margin_ratio 0.2847
+ValNegDist   q50 1.4095 q75 1.5705 q90 1.7546 below_margin_ratio 0.2853
+Epoch 13/100 | Train Loss 0.0277 AP 0.6272 | Val Loss 0.0231 AP 0.6400 | P@2 1.0000 P@5 0.9200 P@10 0.8733 P@20 0.9133 P@50 0.7693 P@100 0.6340 P@200 0.5610
+TrainNegDist q50 1.4081 q75 1.5629 q90 1.7365 below_margin_ratio 0.2746
+ValNegDist   q50 1.4098 q75 1.5694 q90 1.7345 below_margin_ratio 0.2715
+Epoch 14/100 | Train Loss 0.0271 AP 0.6351 | Val Loss 0.0213 AP 0.6532 | P@2 1.0000 P@5 0.9733 P@10 0.9467 P@20 0.9233 P@50 0.7440 P@100 0.6700 P@200 0.5690
+TrainNegDist q50 1.4110 q75 1.5701 q90 1.7451 below_margin_ratio 0.2884
+ValNegDist   q50 1.4123 q75 1.5733 q90 1.7450 below_margin_ratio 0.2927
+Epoch 15/100 | Train Loss 0.0263 AP 0.6179 | Val Loss 0.0218 AP 0.6458 | P@2 1.0000 P@5 1.0000 P@10 0.9467 P@20 0.9133 P@50 0.7667 P@100 0.6660 P@200 0.5513
+TrainNegDist q50 1.4098 q75 1.5678 q90 1.7391 below_margin_ratio 0.2930
+ValNegDist   q50 1.4105 q75 1.5716 q90 1.7469 below_margin_ratio 0.2972
+Epoch 16/100 | Train Loss 0.0263 AP 0.6415 | Val Loss 0.0208 AP 0.6648 | P@2 1.0000 P@5 0.9733 P@10 0.9333 P@20 0.9467 P@50 0.7827 P@100 0.6813 P@200 0.5743
+TrainNegDist q50 1.3992 q75 1.5534 q90 1.7311 below_margin_ratio 0.3032
+ValNegDist   q50 1.4016 q75 1.5546 q90 1.7286 below_margin_ratio 0.2963
+Epoch 17/100 | Train Loss 0.0256 AP 0.6946 | Val Loss 0.0189 AP 0.7087 | P@2 1.0000 P@5 1.0000 P@10 0.9267 P@20 0.9667 P@50 0.8267 P@100 0.7420 P@200 0.6157
+TrainNegDist q50 1.4069 q75 1.5567 q90 1.7235 below_margin_ratio 0.2844
+ValNegDist   q50 1.4103 q75 1.5574 q90 1.7302 below_margin_ratio 0.2786
+Epoch 18/100 | Train Loss 0.0252 AP 0.6129 | Val Loss 0.0219 AP 0.6317 | P@2 1.0000 P@5 1.0000 P@10 0.9000 P@20 0.9133 P@50 0.7013 P@100 0.6587 P@200 0.5463
+TrainNegDist q50 1.3986 q75 1.5440 q90 1.7142 below_margin_ratio 0.3033
+ValNegDist   q50 1.3997 q75 1.5467 q90 1.7213 below_margin_ratio 0.2946
+Epoch 19/100 | Train Loss 0.0249 AP 0.6221 | Val Loss 0.0213 AP 0.6322 | P@2 1.0000 P@5 1.0000 P@10 0.9267 P@20 0.8833 P@50 0.7467 P@100 0.6373 P@200 0.5483
+TrainNegDist q50 1.4059 q75 1.5621 q90 1.7326 below_margin_ratio 0.2975
+ValNegDist   q50 1.4057 q75 1.5624 q90 1.7330 below_margin_ratio 0.2941
+Epoch 20/100 | Train Loss 0.0247 AP 0.6752 | Val Loss 0.0198 AP 0.6947 | P@2 1.0000 P@5 0.9467 P@10 0.9467 P@20 0.9400 P@50 0.8400 P@100 0.7093 P@200 0.6047
+TrainNegDist q50 1.4087 q75 1.5575 q90 1.7246 below_margin_ratio 0.3040
+ValNegDist   q50 1.4109 q75 1.5616 q90 1.7234 below_margin_ratio 0.3054
+Epoch 21/100 | Train Loss 0.0244 AP 0.6626 | Val Loss 0.0195 AP 0.6780 | P@2 1.0000 P@5 0.9733 P@10 0.9267 P@20 0.9133 P@50 0.7960 P@100 0.7087 P@200 0.5867
+TrainNegDist q50 1.4061 q75 1.5548 q90 1.7229 below_margin_ratio 0.2969
+ValNegDist   q50 1.4068 q75 1.5577 q90 1.7233 below_margin_ratio 0.2978
+Epoch 22/100 | Train Loss 0.0240 AP 0.6632 | Val Loss 0.0196 AP 0.6761 | P@2 1.0000 P@5 1.0000 P@10 0.9600 P@20 0.9367 P@50 0.7987 P@100 0.6860 P@200 0.5890
+TrainNegDist q50 1.4075 q75 1.5630 q90 1.7287 below_margin_ratio 0.3132
+ValNegDist   q50 1.4136 q75 1.5695 q90 1.7311 below_margin_ratio 0.3054
+Epoch 23/100 | Train Loss 0.0240 AP 0.6867 | Val Loss 0.0189 AP 0.7009 | P@2 1.0000 P@5 1.0000 P@10 0.9467 P@20 0.9000 P@50 0.8107 P@100 0.7120 P@200 0.6253
+TrainNegDist q50 1.4008 q75 1.5556 q90 1.7288 below_margin_ratio 0.3033
+ValNegDist   q50 1.3982 q75 1.5609 q90 1.7333 below_margin_ratio 0.3053
+Epoch 24/100 | Train Loss 0.0239 AP 0.6331 | Val Loss 0.0218 AP 0.6305 | P@2 1.0000 P@5 1.0000 P@10 0.8867 P@20 0.9267 P@50 0.7707 P@100 0.6560 P@200 0.5273
+TrainNegDist q50 1.3779 q75 1.5508 q90 1.7212 below_margin_ratio 0.3566
+ValNegDist   q50 1.3772 q75 1.5546 q90 1.7249 below_margin_ratio 0.3554
+Epoch 25/100 | Train Loss 0.0236 AP 0.6924 | Val Loss 0.0207 AP 0.7023 | P@2 1.0000 P@5 1.0000 P@10 0.9733 P@20 0.9600 P@50 0.8107 P@100 0.7440 P@200 0.6047
+TrainNegDist q50 1.3831 q75 1.5718 q90 1.7402 below_margin_ratio 0.3789
+ValNegDist   q50 1.3831 q75 1.5746 q90 1.7453 below_margin_ratio 0.3785
+Epoch 26/100 | Train Loss 0.0233 AP 0.6829 | Val Loss 0.0193 AP 0.6999 | P@2 1.0000 P@5 1.0000 P@10 0.9600 P@20 0.9533 P@50 0.7640 P@100 0.7320 P@200 0.6190
+TrainNegDist q50 1.4083 q75 1.5446 q90 1.7079 below_margin_ratio 0.2681
+ValNegDist   q50 1.4082 q75 1.5438 q90 1.7065 below_margin_ratio 0.2658
+Epoch 27/100 | Train Loss 0.0230 AP 0.6848 | Val Loss 0.0184 AP 0.7037 | P@2 1.0000 P@5 0.9467 P@10 0.9400 P@20 0.9567 P@50 0.8107 P@100 0.7320 P@200 0.6167
+TrainNegDist q50 1.4000 q75 1.5264 q90 1.7170 below_margin_ratio 0.2410
+ValNegDist   q50 1.3994 q75 1.5259 q90 1.7172 below_margin_ratio 0.2381
+Epoch 28/100 | Train Loss 0.0227 AP 0.6922 | Val Loss 0.0188 AP 0.7054 | P@2 1.0000 P@5 0.9733 P@10 1.0000 P@20 0.9200 P@50 0.8493 P@100 0.7187 P@200 0.6170
+TrainNegDist q50 1.3953 q75 1.5508 q90 1.7050 below_margin_ratio 0.3347
+ValNegDist   q50 1.3956 q75 1.5541 q90 1.7099 below_margin_ratio 0.3294
+Epoch 29/100 | Train Loss 0.0228 AP 0.6674 | Val Loss 0.0233 AP 0.6839 | P@2 1.0000 P@5 0.9467 P@10 0.9600 P@20 0.9400 P@50 0.8133 P@100 0.7127 P@200 0.5880
+TrainNegDist q50 1.3199 q75 1.4983 q90 1.6723 below_margin_ratio 0.4668
+ValNegDist   q50 1.3214 q75 1.5052 q90 1.6719 below_margin_ratio 0.4679
+Epoch 30/100 | Train Loss 0.0224 AP 0.6505 | Val Loss 0.0198 AP 0.6670 | P@2 1.0000 P@5 0.9733 P@10 0.9867 P@20 0.9133 P@50 0.8120 P@100 0.6793 P@200 0.5730
+TrainNegDist q50 1.3974 q75 1.5234 q90 1.7061 below_margin_ratio 0.2699
+ValNegDist   q50 1.3975 q75 1.5201 q90 1.7024 below_margin_ratio 0.2680
+Epoch 31/100 | Train Loss 0.0219 AP 0.6657 | Val Loss 0.0214 AP 0.6751 | P@2 1.0000 P@5 1.0000 P@10 0.9600 P@20 0.9067 P@50 0.8013 P@100 0.6867 P@200 0.5890
+TrainNegDist q50 1.3640 q75 1.5104 q90 1.6916 below_margin_ratio 0.3740
+ValNegDist   q50 1.3690 q75 1.5086 q90 1.6850 below_margin_ratio 0.3637
+Epoch 32/100 | Train Loss 0.0218 AP 0.6711 | Val Loss 0.0202 AP 0.6879 | P@2 1.0000 P@5 0.9733 P@10 0.9533 P@20 0.9467 P@50 0.8240 P@100 0.6793 P@200 0.6087
+TrainNegDist q50 1.3919 q75 1.5329 q90 1.7030 below_margin_ratio 0.3055
+ValNegDist   q50 1.3930 q75 1.5320 q90 1.7067 below_margin_ratio 0.2946
+Epoch 33/100 | Train Loss 0.0217 AP 0.6533 | Val Loss 0.0206 AP 0.6737 | P@2 1.0000 P@5 0.9733 P@10 0.9200 P@20 0.9233 P@50 0.8347 P@100 0.6840 P@200 0.5803
+TrainNegDist q50 1.3806 q75 1.5145 q90 1.6838 below_margin_ratio 0.3408
+ValNegDist   q50 1.3876 q75 1.5149 q90 1.6846 below_margin_ratio 0.3328
+Epoch 34/100 | Train Loss 0.0210 AP 0.7155 | Val Loss 0.0202 AP 0.7332 | P@2 1.0000 P@5 1.0000 P@10 0.9400 P@20 0.9500 P@50 0.8333 P@100 0.7640 P@200 0.6513
+TrainNegDist q50 1.3721 q75 1.5142 q90 1.6892 below_margin_ratio 0.3226
+ValNegDist   q50 1.3721 q75 1.5113 q90 1.6916 below_margin_ratio 0.3171
+Epoch 35/100 | Train Loss 0.0212 AP 0.6719 | Val Loss 0.0290 AP 0.6870 | P@2 1.0000 P@5 0.9733 P@10 0.9467 P@20 0.9400 P@50 0.8147 P@100 0.7053 P@200 0.5973
+TrainNegDist q50 1.3706 q75 1.5487 q90 1.6809 below_margin_ratio 0.4143
+ValNegDist   q50 1.3652 q75 1.5415 q90 1.6697 below_margin_ratio 0.4203
+Epoch 36/100 | Train Loss 0.0210 AP 0.6486 | Val Loss 0.0180 AP 0.6661 | P@2 1.0000 P@5 1.0000 P@10 1.0000 P@20 0.9267 P@50 0.8093 P@100 0.6840 P@200 0.5670
+TrainNegDist q50 1.4030 q75 1.5341 q90 1.6973 below_margin_ratio 0.2377
+ValNegDist   q50 1.4043 q75 1.5373 q90 1.7002 below_margin_ratio 0.2339
+Epoch 37/100 | Train Loss 0.0210 AP 0.7022 | Val Loss 0.0177 AP 0.7290 | P@2 1.0000 P@5 0.9733 P@10 0.9733 P@20 0.9433 P@50 0.8427 P@100 0.7420 P@200 0.6517
+TrainNegDist q50 1.4007 q75 1.5276 q90 1.6988 below_margin_ratio 0.2696
+ValNegDist   q50 1.4027 q75 1.5243 q90 1.7034 below_margin_ratio 0.2630
+Epoch 38/100 | Train Loss 0.0207 AP 0.6554 | Val Loss 0.0283 AP 0.6694 | P@2 1.0000 P@5 0.9200 P@10 0.9867 P@20 0.9500 P@50 0.7907 P@100 0.6807 P@200 0.5800
+TrainNegDist q50 1.2963 q75 1.4813 q90 1.6011 below_margin_ratio 0.5050
+ValNegDist   q50 1.2969 q75 1.4824 q90 1.6053 below_margin_ratio 0.5042
+Epoch 39/100 | Train Loss 0.0205 AP 0.6332 | Val Loss 0.0274 AP 0.6432 | P@2 1.0000 P@5 0.9733 P@10 0.9333 P@20 0.8633 P@50 0.7600 P@100 0.6680 P@200 0.5533
+TrainNegDist q50 1.3376 q75 1.5091 q90 1.6420 below_margin_ratio 0.4510
+ValNegDist   q50 1.3409 q75 1.5086 q90 1.6519 below_margin_ratio 0.4513
+Epoch 40/100 | Train Loss 0.0205 AP 0.6822 | Val Loss 0.0171 AP 0.6932 | P@2 1.0000 P@5 1.0000 P@10 0.9333 P@20 0.9533 P@50 0.8213 P@100 0.7147 P@200 0.6017
+TrainNegDist q50 1.4114 q75 1.5525 q90 1.6890 below_margin_ratio 0.2666
+ValNegDist   q50 1.4118 q75 1.5515 q90 1.6908 below_margin_ratio 0.2686
+Epoch 41/100 | Train Loss 0.0202 AP 0.6493 | Val Loss 0.0932 AP 0.6667 | P@2 1.0000 P@5 0.9467 P@10 0.9333 P@20 0.9333 P@50 0.7933 P@100 0.6900 P@200 0.5730
+TrainNegDist q50 0.8012 q75 1.0082 q90 1.1948 below_margin_ratio 0.9512
+ValNegDist   q50 0.8021 q75 1.0075 q90 1.1987 below_margin_ratio 0.9471
+Epoch 42/100 | Train Loss 0.0202 AP 0.6677 | Val Loss 0.0256 AP 0.6884 | P@2 1.0000 P@5 0.9733 P@10 0.9600 P@20 0.9367 P@50 0.8213 P@100 0.7113 P@200 0.5950
+TrainNegDist q50 1.3222 q75 1.4762 q90 1.6147 below_margin_ratio 0.4606
+ValNegDist   q50 1.3251 q75 1.4769 q90 1.6144 below_margin_ratio 0.4598
+Epoch 43/100 | Train Loss 0.0199 AP 0.6815 | Val Loss 0.0485 AP 0.6987 | P@2 1.0000 P@5 0.9467 P@10 0.9467 P@20 0.9133 P@50 0.7880 P@100 0.7053 P@200 0.6300
+TrainNegDist q50 1.0174 q75 1.2196 q90 1.4133 below_margin_ratio 0.8242
+ValNegDist   q50 1.0269 q75 1.2320 q90 1.4298 below_margin_ratio 0.8212
+Epoch 44/100 | Train Loss 0.0216 AP 0.6738 | Val Loss 0.0282 AP 0.6898 | P@2 1.0000 P@5 0.9733 P@10 0.9600 P@20 0.9200 P@50 0.8013 P@100 0.7040 P@200 0.6080
+TrainNegDist q50 1.3438 q75 1.4942 q90 1.6154 below_margin_ratio 0.4206
+ValNegDist   q50 1.3485 q75 1.5012 q90 1.6228 below_margin_ratio 0.4145
+Epoch 45/100 | Train Loss 0.0198 AP 0.7172 | Val Loss 0.0277 AP 0.7321 | P@2 1.0000 P@5 0.9733 P@10 0.9600 P@20 0.9667 P@50 0.8293 P@100 0.7573 P@200 0.6517
+TrainNegDist q50 1.2519 q75 1.4289 q90 1.5839 below_margin_ratio 0.5768
+ValNegDist   q50 1.2573 q75 1.4370 q90 1.5907 below_margin_ratio 0.5690
+Epoch 46/100 | Train Loss 0.0193 AP 0.6695 | Val Loss 0.0258 AP 0.6911 | P@2 1.0000 P@5 0.9467 P@10 0.9733 P@20 0.9033 P@50 0.8187 P@100 0.6960 P@200 0.6120
+TrainNegDist q50 1.3473 q75 1.4906 q90 1.6236 below_margin_ratio 0.4220
+ValNegDist   q50 1.3420 q75 1.4834 q90 1.6252 below_margin_ratio 0.4319
+Epoch 47/100 | Train Loss 0.0198 AP 0.6799 | Val Loss 0.0340 AP 0.6953 | P@2 1.0000 P@5 0.9467 P@10 0.9733 P@20 0.9467 P@50 0.8293 P@100 0.7233 P@200 0.5993
+TrainNegDist q50 1.2703 q75 1.4356 q90 1.6065 below_margin_ratio 0.5500
+ValNegDist   q50 1.2692 q75 1.4361 q90 1.6090 below_margin_ratio 0.5516
+Epoch 48/100 | Train Loss 0.0196 AP 0.6703 | Val Loss 0.0236 AP 0.6858 | P@2 1.0000 P@5 0.9733 P@10 0.9867 P@20 0.8800 P@50 0.8040 P@100 0.7180 P@200 0.5953
+TrainNegDist q50 1.3085 q75 1.4867 q90 1.6221 below_margin_ratio 0.4873
+ValNegDist   q50 1.3122 q75 1.4909 q90 1.6251 below_margin_ratio 0.4772
+Epoch 49/100 | Train Loss 0.0193 AP 0.6763 | Val Loss 0.0257 AP 0.6884 | P@2 1.0000 P@5 0.9733 P@10 0.9533 P@20 0.9033 P@50 0.8320 P@100 0.7033 P@200 0.6000
+TrainNegDist q50 1.3050 q75 1.4443 q90 1.5705 below_margin_ratio 0.4911
+ValNegDist   q50 1.3032 q75 1.4351 q90 1.5623 below_margin_ratio 0.4934
+Epoch 50/100 | Train Loss 0.0196 AP 0.6862 | Val Loss 0.0444 AP 0.7078 | P@2 1.0000 P@5 0.9467 P@10 0.9467 P@20 0.9467 P@50 0.8093 P@100 0.7253 P@200 0.6290
+TrainNegDist q50 1.0949 q75 1.2913 q90 1.4462 below_margin_ratio 0.7593
+ValNegDist   q50 1.0914 q75 1.2878 q90 1.4365 below_margin_ratio 0.7633
+Epoch 51/100 | Train Loss 0.0196 AP 0.7282 | Val Loss 0.0213 AP 0.7256 | P@2 1.0000 P@5 0.9200 P@10 0.9600 P@20 0.9400 P@50 0.8320 P@100 0.7447 P@200 0.6487
+TrainNegDist q50 1.3544 q75 1.5211 q90 1.6772 below_margin_ratio 0.4103
+ValNegDist   q50 1.3563 q75 1.5185 q90 1.6806 below_margin_ratio 0.4081
+Epoch 52/100 | Train Loss 0.0191 AP 0.6849 | Val Loss 0.0192 AP 0.7144 | P@2 1.0000 P@5 1.0000 P@10 0.9333 P@20 0.9400 P@50 0.8187 P@100 0.7447 P@200 0.6297
+TrainNegDist q50 1.3796 q75 1.5082 q90 1.6539 below_margin_ratio 0.3431
+ValNegDist   q50 1.3834 q75 1.5098 q90 1.6617 below_margin_ratio 0.3388
+Epoch 53/100 | Train Loss 0.0192 AP 0.7233 | Val Loss 0.0177 AP 0.7290 | P@2 1.0000 P@5 0.9733 P@10 0.9733 P@20 0.9167 P@50 0.8360 P@100 0.7500 P@200 0.6520
+TrainNegDist q50 1.3833 q75 1.5041 q90 1.6444 below_margin_ratio 0.2941
+ValNegDist   q50 1.3854 q75 1.5028 q90 1.6374 below_margin_ratio 0.2937
+Epoch 54/100 | Train Loss 0.0189 AP 0.6583 | Val Loss 0.0401 AP 0.6767 | P@2 1.0000 P@5 0.9733 P@10 0.9267 P@20 0.9233 P@50 0.7853 P@100 0.6887 P@200 0.5957
+TrainNegDist q50 1.1734 q75 1.3321 q90 1.4427 below_margin_ratio 0.7008
+ValNegDist   q50 1.1778 q75 1.3317 q90 1.4466 below_margin_ratio 0.7023
+Epoch 55/100 | Train Loss 0.0192 AP 0.6805 | Val Loss 0.0328 AP 0.6956 | P@2 1.0000 P@5 0.9467 P@10 0.8933 P@20 0.9300 P@50 0.8520 P@100 0.6840 P@200 0.6197
+TrainNegDist q50 1.2592 q75 1.4454 q90 1.5898 below_margin_ratio 0.5577
+ValNegDist   q50 1.2631 q75 1.4494 q90 1.6019 below_margin_ratio 0.5519
+Epoch 56/100 | Train Loss 0.0194 AP 0.6359 | Val Loss 0.0539 AP 0.6472 | P@2 1.0000 P@5 0.9467 P@10 0.9467 P@20 0.9067 P@50 0.7560 P@100 0.6887 P@200 0.5473
+TrainNegDist q50 1.0139 q75 1.1999 q90 1.3329 below_margin_ratio 0.8638
+ValNegDist   q50 1.0168 q75 1.1931 q90 1.3265 below_margin_ratio 0.8718
+Epoch 57/100 | Train Loss 0.0190 AP 0.7392 | Val Loss 0.0162 AP 0.7655 | P@2 1.0000 P@5 0.9467 P@10 1.0000 P@20 0.9533 P@50 0.8667 P@100 0.8027 P@200 0.6843
+TrainNegDist q50 1.3974 q75 1.5162 q90 1.6716 below_margin_ratio 0.2660
+ValNegDist   q50 1.3999 q75 1.5184 q90 1.6669 below_margin_ratio 0.2610
+Epoch 58/100 | Train Loss 0.0189 AP 0.6763 | Val Loss 0.0257 AP 0.6970 | P@2 1.0000 P@5 1.0000 P@10 0.9867 P@20 0.9333 P@50 0.8347 P@100 0.7100 P@200 0.6073
+TrainNegDist q50 1.2667 q75 1.3989 q90 1.5395 below_margin_ratio 0.5658
+ValNegDist   q50 1.2718 q75 1.4066 q90 1.5399 below_margin_ratio 0.5538
+Epoch 59/100 | Train Loss 0.0191 AP 0.6635 | Val Loss 0.0272 AP 0.6787 | P@2 1.0000 P@5 0.9733 P@10 0.9333 P@20 0.9200 P@50 0.7800 P@100 0.7100 P@200 0.5903
+TrainNegDist q50 1.2913 q75 1.4348 q90 1.5600 below_margin_ratio 0.5150
+ValNegDist   q50 1.2894 q75 1.4264 q90 1.5567 below_margin_ratio 0.5180
+Epoch 60/100 | Train Loss 0.0192 AP 0.7003 | Val Loss 0.0299 AP 0.7192 | P@2 1.0000 P@5 0.9467 P@10 0.9333 P@20 0.9300 P@50 0.8333 P@100 0.7327 P@200 0.6437
+TrainNegDist q50 1.2918 q75 1.4542 q90 1.5823 below_margin_ratio 0.5115
+ValNegDist   q50 1.2952 q75 1.4567 q90 1.5816 below_margin_ratio 0.5080
+Epoch 61/100 | Train Loss 0.0203 AP 0.7150 | Val Loss 0.0173 AP 0.7251 | P@2 1.0000 P@5 1.0000 P@10 0.9267 P@20 0.9600 P@50 0.8427 P@100 0.7373 P@200 0.6463
+TrainNegDist q50 1.3906 q75 1.4897 q90 1.6302 below_margin_ratio 0.2903
+ValNegDist   q50 1.3937 q75 1.4902 q90 1.6350 below_margin_ratio 0.2841
+Epoch 62/100 | Train Loss 0.0190 AP 0.7032 | Val Loss 0.0215 AP 0.7149 | P@2 1.0000 P@5 0.9733 P@10 0.9733 P@20 0.9100 P@50 0.8627 P@100 0.7187 P@200 0.6343
+TrainNegDist q50 1.3744 q75 1.5022 q90 1.6575 below_margin_ratio 0.3514
+ValNegDist   q50 1.3715 q75 1.5030 q90 1.6627 below_margin_ratio 0.3511
+Epoch 63/100 | Train Loss 0.0193 AP 0.6518 | Val Loss 0.0845 AP 0.6608 | P@2 1.0000 P@5 0.9733 P@10 0.8867 P@20 0.9033 P@50 0.7893 P@100 0.6807 P@200 0.5720
+TrainNegDist q50 0.8877 q75 1.1560 q90 1.3031 below_margin_ratio 0.8973
+ValNegDist   q50 0.8949 q75 1.1580 q90 1.3002 below_margin_ratio 0.8997
+Epoch 64/100 | Train Loss 0.0190 AP 0.6902 | Val Loss 0.0406 AP 0.7089 | P@2 1.0000 P@5 0.9733 P@10 0.9467 P@20 0.9467 P@50 0.8320 P@100 0.7320 P@200 0.6213
+TrainNegDist q50 1.0762 q75 1.2525 q90 1.4024 below_margin_ratio 0.8055
+ValNegDist   q50 1.0678 q75 1.2500 q90 1.4066 below_margin_ratio 0.8059
+Epoch 65/100 | Train Loss 0.0191 AP 0.7031 | Val Loss 0.0180 AP 0.7177 | P@2 1.0000 P@5 0.9467 P@10 0.9733 P@20 0.9267 P@50 0.8360 P@100 0.7533 P@200 0.6280
+TrainNegDist q50 1.3718 q75 1.4994 q90 1.6294 below_margin_ratio 0.3288
+ValNegDist   q50 1.3773 q75 1.5069 q90 1.6362 below_margin_ratio 0.3239
+Epoch 66/100 | Train Loss 0.0189 AP 0.7118 | Val Loss 0.0184 AP 0.7177 | P@2 1.0000 P@5 0.9733 P@10 0.9600 P@20 0.9100 P@50 0.8507 P@100 0.7160 P@200 0.6447
+TrainNegDist q50 1.3793 q75 1.5006 q90 1.6434 below_margin_ratio 0.3154
+ValNegDist   q50 1.3799 q75 1.5042 q90 1.6457 below_margin_ratio 0.3096
+Epoch 67/100 | Train Loss 0.0185 AP 0.7297 | Val Loss 0.0241 AP 0.7499 | P@2 1.0000 P@5 0.9733 P@10 0.9600 P@20 0.9667 P@50 0.8680 P@100 0.7767 P@200 0.6667
+TrainNegDist q50 1.2941 q75 1.4618 q90 1.6101 below_margin_ratio 0.5087
+ValNegDist   q50 1.2952 q75 1.4630 q90 1.6067 below_margin_ratio 0.5077
+Epoch 68/100 | Train Loss 0.0186 AP 0.6898 | Val Loss 0.0344 AP 0.7011 | P@2 1.0000 P@5 0.9733 P@10 0.9600 P@20 0.9267 P@50 0.8213 P@100 0.7133 P@200 0.6197
+TrainNegDist q50 1.1486 q75 1.2838 q90 1.3946 below_margin_ratio 0.7773
+ValNegDist   q50 1.1538 q75 1.2842 q90 1.3967 below_margin_ratio 0.7757
+Epoch 69/100 | Train Loss 0.0189 AP 0.6935 | Val Loss 0.0305 AP 0.7009 | P@2 1.0000 P@5 0.9733 P@10 0.9333 P@20 0.9100 P@50 0.8333 P@100 0.7167 P@200 0.6177
+TrainNegDist q50 1.2037 q75 1.3609 q90 1.5117 below_margin_ratio 0.6644
+ValNegDist   q50 1.2078 q75 1.3662 q90 1.5116 below_margin_ratio 0.6596
+Epoch 70/100 | Train Loss 0.0187 AP 0.7282 | Val Loss 0.0163 AP 0.7478 | P@2 1.0000 P@5 0.9733 P@10 0.9867 P@20 0.9633 P@50 0.8493 P@100 0.7760 P@200 0.6667
+TrainNegDist q50 1.3947 q75 1.5063 q90 1.6368 below_margin_ratio 0.2611
+ValNegDist   q50 1.3965 q75 1.5087 q90 1.6350 below_margin_ratio 0.2610
+Epoch 71/100 | Train Loss 0.0189 AP 0.7625 | Val Loss 0.0147 AP 0.7860 | P@2 1.0000 P@5 1.0000 P@10 0.9733 P@20 0.9800 P@50 0.8893 P@100 0.8033 P@200 0.7153
+TrainNegDist q50 1.4004 q75 1.5089 q90 1.6583 below_margin_ratio 0.2623
+ValNegDist   q50 1.4018 q75 1.5158 q90 1.6552 below_margin_ratio 0.2630
+Epoch 72/100 | Train Loss 0.0185 AP 0.6221 | Val Loss 0.0621 AP 0.6429 | P@2 1.0000 P@5 0.9733 P@10 0.9400 P@20 0.8933 P@50 0.7453 P@100 0.6560 P@200 0.5590
+TrainNegDist q50 1.0361 q75 1.2150 q90 1.3251 below_margin_ratio 0.8714
+ValNegDist   q50 1.0408 q75 1.2133 q90 1.3213 below_margin_ratio 0.8755
+Epoch 73/100 | Train Loss 0.0187 AP 0.6520 | Val Loss 0.0384 AP 0.6605 | P@2 1.0000 P@5 0.9200 P@10 0.9267 P@20 0.9100 P@50 0.8000 P@100 0.6787 P@200 0.5683
+TrainNegDist q50 1.2813 q75 1.4857 q90 1.6160 below_margin_ratio 0.5206
+ValNegDist   q50 1.2862 q75 1.4881 q90 1.6148 below_margin_ratio 0.5120
+Epoch 74/100 | Train Loss 0.0188 AP 0.7049 | Val Loss 0.0235 AP 0.7292 | P@2 1.0000 P@5 0.9733 P@10 0.9267 P@20 0.9467 P@50 0.8360 P@100 0.7553 P@200 0.6490
+TrainNegDist q50 1.2884 q75 1.4404 q90 1.6076 below_margin_ratio 0.5260
+ValNegDist   q50 1.2913 q75 1.4396 q90 1.6054 below_margin_ratio 0.5213
+Epoch 75/100 | Train Loss 0.0186 AP 0.6592 | Val Loss 0.0330 AP 0.6706 | P@2 1.0000 P@5 0.9733 P@10 0.9467 P@20 0.9300 P@50 0.7720 P@100 0.6713 P@200 0.5943
+TrainNegDist q50 1.3230 q75 1.4598 q90 1.5807 below_margin_ratio 0.4561
+ValNegDist   q50 1.3250 q75 1.4608 q90 1.5780 below_margin_ratio 0.4503
+Epoch 76/100 | Train Loss 0.0185 AP 0.6445 | Val Loss 0.0612 AP 0.6620 | P@2 1.0000 P@5 0.9733 P@10 0.9200 P@20 0.9133 P@50 0.7853 P@100 0.6587 P@200 0.5837
+TrainNegDist q50 0.9510 q75 1.1267 q90 1.2644 below_margin_ratio 0.9252
+ValNegDist   q50 0.9508 q75 1.1236 q90 1.2607 below_margin_ratio 0.9270
+Epoch 77/100 | Train Loss 0.0184 AP 0.7541 | Val Loss 0.0138 AP 0.7717 | P@2 1.0000 P@5 0.9733 P@10 0.9867 P@20 0.9467 P@50 0.8800 P@100 0.7907 P@200 0.6997
+TrainNegDist q50 1.4031 q75 1.4985 q90 1.6489 below_margin_ratio 0.1959
+ValNegDist   q50 1.4046 q75 1.5010 q90 1.6499 below_margin_ratio 0.1890
+Epoch 78/100 | Train Loss 0.0183 AP 0.6666 | Val Loss 0.0612 AP 0.6901 | P@2 1.0000 P@5 0.9733 P@10 0.9533 P@20 0.9467 P@50 0.7973 P@100 0.7140 P@200 0.6023
+TrainNegDist q50 0.9458 q75 1.0902 q90 1.2114 below_margin_ratio 0.9606
+ValNegDist   q50 0.9492 q75 1.1021 q90 1.2185 below_margin_ratio 0.9581
+Epoch 79/100 | Train Loss 0.0187 AP 0.7223 | Val Loss 0.0214 AP 0.7220 | P@2 1.0000 P@5 0.9733 P@10 0.9533 P@20 0.9333 P@50 0.8333 P@100 0.7407 P@200 0.6430
+TrainNegDist q50 1.3563 q75 1.5017 q90 1.6464 below_margin_ratio 0.4018
+ValNegDist   q50 1.3615 q75 1.5062 q90 1.6476 below_margin_ratio 0.3950
+Epoch 80/100 | Train Loss 0.0187 AP 0.7139 | Val Loss 0.0212 AP 0.7183 | P@2 1.0000 P@5 0.9733 P@10 0.9533 P@20 0.9333 P@50 0.8333 P@100 0.7440 P@200 0.6343
+TrainNegDist q50 1.3137 q75 1.4400 q90 1.5842 below_margin_ratio 0.4666
+ValNegDist   q50 1.3187 q75 1.4417 q90 1.5786 below_margin_ratio 0.4586
+Epoch 81/100 | Train Loss 0.0186 AP 0.7292 | Val Loss 0.0189 AP 0.7414 | P@2 1.0000 P@5 0.9733 P@10 0.9733 P@20 0.9333 P@50 0.8720 P@100 0.7540 P@200 0.6633
+TrainNegDist q50 1.3731 q75 1.4891 q90 1.6556 below_margin_ratio 0.3289
+ValNegDist   q50 1.3743 q75 1.4917 q90 1.6563 below_margin_ratio 0.3216
+Epoch 82/100 | Train Loss 0.0186 AP 0.7272 | Val Loss 0.0166 AP 0.7325 | P@2 1.0000 P@5 0.9733 P@10 0.9733 P@20 0.9167 P@50 0.8493 P@100 0.7527 P@200 0.6540
+TrainNegDist q50 1.3904 q75 1.4944 q90 1.6229 below_margin_ratio 0.2773
+ValNegDist   q50 1.3943 q75 1.4965 q90 1.6237 below_margin_ratio 0.2605
+Epoch 83/100 | Train Loss 0.0183 AP 0.6884 | Val Loss 0.0358 AP 0.7073 | P@2 1.0000 P@5 0.9467 P@10 0.9400 P@20 0.9200 P@50 0.8307 P@100 0.7327 P@200 0.6220
+TrainNegDist q50 1.2524 q75 1.4387 q90 1.5800 below_margin_ratio 0.5566
+ValNegDist   q50 1.2442 q75 1.4456 q90 1.5774 below_margin_ratio 0.5642
+Epoch 84/100 | Train Loss 0.0184 AP 0.7516 | Val Loss 0.0178 AP 0.7671 | P@2 1.0000 P@5 1.0000 P@10 0.9600 P@20 0.9700 P@50 0.8440 P@100 0.7973 P@200 0.6947
+TrainNegDist q50 1.3775 q75 1.4945 q90 1.6251 below_margin_ratio 0.3233
+ValNegDist   q50 1.3817 q75 1.4980 q90 1.6214 below_margin_ratio 0.3125
+Epoch 85/100 | Train Loss 0.0184 AP 0.7045 | Val Loss 0.0219 AP 0.7204 | P@2 1.0000 P@5 0.9733 P@10 0.9733 P@20 0.9300 P@50 0.8320 P@100 0.7340 P@200 0.6430
+TrainNegDist q50 1.3460 q75 1.4741 q90 1.5961 below_margin_ratio 0.4077
+ValNegDist   q50 1.3449 q75 1.4736 q90 1.6013 below_margin_ratio 0.4065
+Epoch 86/100 | Train Loss 0.0181 AP 0.7286 | Val Loss 0.0233 AP 0.7413 | P@2 1.0000 P@5 0.9467 P@10 1.0000 P@20 0.9333 P@50 0.8853 P@100 0.7460 P@200 0.6630
+TrainNegDist q50 1.3162 q75 1.4658 q90 1.6174 below_margin_ratio 0.4713
+ValNegDist   q50 1.3166 q75 1.4664 q90 1.6257 below_margin_ratio 0.4689
+Epoch 87/100 | Train Loss 0.0187 AP 0.6820 | Val Loss 0.0274 AP 0.7044 | P@2 1.0000 P@5 0.9733 P@10 0.9533 P@20 0.9233 P@50 0.8053 P@100 0.7453 P@200 0.6147
+TrainNegDist q50 1.3510 q75 1.4983 q90 1.6401 below_margin_ratio 0.4231
+ValNegDist   q50 1.3518 q75 1.4984 q90 1.6422 below_margin_ratio 0.4233
+Epoch 88/100 | Train Loss 0.0182 AP 0.7364 | Val Loss 0.0211 AP 0.7502 | P@2 1.0000 P@5 0.9733 P@10 0.9600 P@20 0.9400 P@50 0.8920 P@100 0.7693 P@200 0.6677
+TrainNegDist q50 1.3441 q75 1.4757 q90 1.6052 below_margin_ratio 0.4125
+ValNegDist   q50 1.3447 q75 1.4795 q90 1.6087 below_margin_ratio 0.4091
+Epoch 89/100 | Train Loss 0.0183 AP 0.7194 | Val Loss 0.0316 AP 0.7261 | P@2 1.0000 P@5 0.9733 P@10 0.9333 P@20 0.9467 P@50 0.8333 P@100 0.7447 P@200 0.6487
+TrainNegDist q50 1.2479 q75 1.4301 q90 1.5593 below_margin_ratio 0.5725
+ValNegDist   q50 1.2596 q75 1.4441 q90 1.5680 below_margin_ratio 0.5575
+Epoch 90/100 | Train Loss 0.0184 AP 0.7559 | Val Loss 0.0191 AP 0.7736 | P@2 1.0000 P@5 0.9733 P@10 0.9867 P@20 0.9667 P@50 0.8787 P@100 0.7813 P@200 0.7063
+TrainNegDist q50 1.3781 q75 1.5087 q90 1.6296 below_margin_ratio 0.3532
+ValNegDist   q50 1.3800 q75 1.5029 q90 1.6263 below_margin_ratio 0.3485
+Epoch 91/100 | Train Loss 0.0180 AP 0.6932 | Val Loss 0.0280 AP 0.7065 | P@2 1.0000 P@5 0.9733 P@10 0.9667 P@20 0.9133 P@50 0.8373 P@100 0.7300 P@200 0.6187
+TrainNegDist q50 1.2925 q75 1.4262 q90 1.5678 below_margin_ratio 0.5152
+ValNegDist   q50 1.2955 q75 1.4236 q90 1.5655 below_margin_ratio 0.5084
+Epoch 92/100 | Train Loss 0.0183 AP 0.6664 | Val Loss 0.0477 AP 0.6941 | P@2 1.0000 P@5 0.9733 P@10 0.9467 P@20 0.9467 P@50 0.8213 P@100 0.6987 P@200 0.6120
+TrainNegDist q50 1.0961 q75 1.2438 q90 1.3607 below_margin_ratio 0.8366
+ValNegDist   q50 1.1004 q75 1.2453 q90 1.3624 below_margin_ratio 0.8363
+Epoch 93/100 | Train Loss 0.0182 AP 0.7149 | Val Loss 0.0283 AP 0.7254 | P@2 1.0000 P@5 0.9733 P@10 0.9867 P@20 0.9800 P@50 0.8187 P@100 0.7460 P@200 0.6443
+TrainNegDist q50 1.3257 q75 1.4256 q90 1.5348 below_margin_ratio 0.4401
+ValNegDist   q50 1.3278 q75 1.4220 q90 1.5328 below_margin_ratio 0.4363
+Epoch 94/100 | Train Loss 0.0184 AP 0.7228 | Val Loss 0.0168 AP 0.7359 | P@2 1.0000 P@5 1.0000 P@10 0.9600 P@20 0.9567 P@50 0.8547 P@100 0.7680 P@200 0.6477
+TrainNegDist q50 1.4068 q75 1.5022 q90 1.6433 below_margin_ratio 0.2433
+ValNegDist   q50 1.4113 q75 1.5036 q90 1.6438 below_margin_ratio 0.2353
+Epoch 95/100 | Train Loss 0.0189 AP 0.7151 | Val Loss 0.0162 AP 0.7349 | P@2 1.0000 P@5 1.0000 P@10 0.9400 P@20 0.9467 P@50 0.8640 P@100 0.7767 P@200 0.6410
+TrainNegDist q50 1.4054 q75 1.5276 q90 1.6569 below_margin_ratio 0.2484
+ValNegDist   q50 1.4038 q75 1.5282 q90 1.6581 below_margin_ratio 0.2450
+Epoch 96/100 | Train Loss 0.0182 AP 0.6902 | Val Loss 0.0268 AP 0.7061 | P@2 1.0000 P@5 0.9733 P@10 0.9533 P@20 0.9400 P@50 0.8173 P@100 0.7353 P@200 0.6183
+TrainNegDist q50 1.2710 q75 1.4003 q90 1.5423 below_margin_ratio 0.5560
+ValNegDist   q50 1.2757 q75 1.4025 q90 1.5431 below_margin_ratio 0.5490
+Epoch 97/100 | Train Loss 0.0184 AP 0.6980 | Val Loss 0.0183 AP 0.7073 | P@2 1.0000 P@5 0.9733 P@10 0.9467 P@20 0.9467 P@50 0.8080 P@100 0.7293 P@200 0.6257
+TrainNegDist q50 1.3972 q75 1.4987 q90 1.6056 below_margin_ratio 0.2597
+ValNegDist   q50 1.4020 q75 1.5003 q90 1.6012 below_margin_ratio 0.2579
+Epoch 98/100 | Train Loss 0.0182 AP 0.6836 | Val Loss 0.0251 AP 0.6985 | P@2 1.0000 P@5 1.0000 P@10 0.9267 P@20 0.8933 P@50 0.7987 P@100 0.7360 P@200 0.6133
+TrainNegDist q50 1.3230 q75 1.4777 q90 1.6045 below_margin_ratio 0.4620
+ValNegDist   q50 1.3274 q75 1.4778 q90 1.6043 below_margin_ratio 0.4574
+Epoch 99/100 | Train Loss 0.0181 AP 0.7417 | Val Loss 0.0157 AP 0.7595 | P@2 1.0000 P@5 0.9733 P@10 0.9733 P@20 0.9667 P@50 0.8773 P@100 0.7833 P@200 0.6790
+TrainNegDist q50 1.3958 q75 1.4907 q90 1.6119 below_margin_ratio 0.2451
+ValNegDist   q50 1.4005 q75 1.4890 q90 1.6117 below_margin_ratio 0.2413
+Epoch 100/100 | Train Loss 0.0187 AP 0.6235 | Val Loss 0.0778 AP 0.6558 | P@2 1.0000 P@5 0.9733 P@10 0.9467 P@20 0.9167 P@50 0.7800 P@100 0.6560 P@200 0.5727
+TrainNegDist q50 0.9164 q75 1.1797 q90 1.3347 below_margin_ratio 0.8711
+ValNegDist   q50 0.9147 q75 1.1870 q90 1.3378 below_margin_ratio 0.8680
+
+Run Config
+epochs=100
+batch_size=64
+lr=0.0005
+weight_decay=0.0001
+margin=1.3
+num_workers=2
+train_path=data/train_trajectories.npy
+test_path=data/test_trajectories.npy
+device=cuda
+model.feature_dim=6
+model.hidden_dim=128
+model.num_layers=2
+model.conv_channels=32
+model.embed_dim=32
+model.dropout=0.1
+normalize_mode=embed
+--- end ---

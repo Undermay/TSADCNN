@@ -1,5 +1,5 @@
 import os
-from typing import Dict, Any, Tuple, List
+from typing import Dict, Any, Tuple, List, Optional
 
 import numpy as np
 import torch
@@ -31,10 +31,16 @@ class TrajectoryDataset(Dataset):
     def __init__(
         self,
         data_path: str,
-        is_training: bool = True
+        is_training: bool = True,
+        minmax_stats: Optional[Dict[str, np.ndarray]] = None,
+        apply_minmax: bool = False,
+        eps: float = 1e-6,
     ):
         self.data_path = data_path
         self.is_training = is_training
+        self.minmax_stats = minmax_stats
+        self.apply_minmax = apply_minmax and (minmax_stats is not None)
+        self.eps = eps
         
         # 数据存储
         self.trajectory_pairs = []
@@ -86,6 +92,18 @@ class TrajectoryDataset(Dataset):
             old_traj = np.array(old_trajectories[i], dtype=np.float32)
             new_traj = np.array(new_trajectories[i], dtype=np.float32)
             label = int(labels[i])
+
+            # optional Min-Max normalization per feature using shared stats
+            if self.apply_minmax:
+                mn = self.minmax_stats['min'].astype(np.float32)
+                mx = self.minmax_stats['max'].astype(np.float32)
+                rng = (mx - mn)
+                rng[rng < self.eps] = 1.0  # avoid div by near-zero
+                old_traj = (old_traj - mn) / rng
+                new_traj = (new_traj - mn) / rng
+                # clip to [0,1]
+                old_traj = np.clip(old_traj, 0.0, 1.0)
+                new_traj = np.clip(new_traj, 0.0, 1.0)
             
             # 统计正负样本
             if label == 1:
@@ -157,11 +175,27 @@ def collate_batch(batch):
     
     return old_trajectories, new_trajectories, labels
 
+def _compute_minmax_stats_from_file(file_path: str) -> Dict[str, np.ndarray]:
+    """
+    Compute per-feature Min-Max across old and new trajectories in a dataset file.
+    Returns dict with 'min' and 'max' arrays of shape [feature_dim].
+    """
+    data = np.load(file_path, allow_pickle=True).item()
+    old = data['old_trajectories']  # [N, L, D]
+    new = data['new_trajectories']  # [N, L, D]
+    # concat along samples and time, keep feature dim
+    both = np.concatenate([old.reshape(-1, old.shape[-1]), new.reshape(-1, new.shape[-1])], axis=0)
+    mn = both.min(axis=0)
+    mx = both.max(axis=0)
+    return {'min': mn, 'max': mx}
+
+
 def create_data_loaders(
     train_path: str,
     test_path: str,
     batch_size: int = 32,
-    num_workers: int = 4
+    num_workers: int = 4,
+    normalize_input: str = 'none'
 ) -> Tuple[DataLoader, DataLoader]:
     """
     创建对比学习数据加载器
@@ -177,14 +211,24 @@ def create_data_loaders(
         test_loader: 测试数据加载器
     """
     # 创建数据集
+    # decide input normalization
+    apply_minmax = (normalize_input == 'minmax')
+    stats = None
+    if apply_minmax:
+        stats = _compute_minmax_stats_from_file(train_path)
+
     train_dataset = TrajectoryDataset(
         data_path=train_path,
-        is_training=True
+        is_training=True,
+        minmax_stats=stats,
+        apply_minmax=apply_minmax,
     )
     
     test_dataset = TrajectoryDataset(
         data_path=test_path,
-        is_training=False
+        is_training=False,
+        minmax_stats=stats,
+        apply_minmax=apply_minmax,
     )
     
     train_loader = DataLoader(
