@@ -1,0 +1,6 @@
+# 忽略整个数据目录
+data/
+
+# 顺便把 Python 缓存也忽略
+__pycache__/
+*.pyc
